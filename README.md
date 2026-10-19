@@ -1,24 +1,72 @@
-# [GBCC Android](https://gbcc.github.io)
-This is the android front-end to [GBCC](https://gbcc.github.io), a
-cross-platform Game Boy and Game Boy Color emulator written in C with a focus
-on accuracy. See the [main repository](https://github.com/philj56/gbcc) for
-details.
+# GBCG
 
-## Install
-You can get gbcc on [Google Play](https://play.google.com/store/apps/details?id=com.philj56.gbcc).
+Emulador de **Game Boy y Game Boy Color** para Android. Es un fork de
+[GBCC Android](https://github.com/philj56/gbcc-android), de Philip Jones, que usa
+el núcleo [GBCC](https://github.com/philj56/gbcc): un emulador escrito en C con
+foco en la precisión.
 
-### Prebuilt packages ![](https://github.com/philj56/gbcc-android/workflows/Build%20APK/badge.svg)
-Debug packages are generated on each commit. To download them, navigate to the
-[actions](https://github.com/philj56/gbcc-android/actions) tab (you'll need to
-be logged in to GitHub to do this). Select the latest "Build Packages" job that
-succeeded, and look for the artifacts dropdown.
+GBCG mantiene el emulador original y se instala **junto a GBCC**, sin
+reemplazarlo, porque tiene su propio identificador (`io.github.gainciarte.gbcg`).
 
-### From source
-I'll write up instructions on this at some point, but it's pretty much just
-install the Android SDK & NDK, clone this repo recursively, and then run
+## Estado
+
+El fork recién empieza. Por ahora, lo distinto del original es:
+
+- **Nombre e identificador propios:** la app se llama GBCG y se instala aparte de GBCC.
+- **Reportes de errores:** cuando el emulador falla, el botón "Send feedback" abre
+  el correo con el registro del error, pero sin destinatario. En el original iba al
+  correo del autor, y los errores de este fork no deberían llegarle a él.
+- **Compilación automática:** la acción de GitHub que arma el APK se actualizó a
+  las versiones vigentes de las acciones (`checkout`, `setup-java` y
+  `upload-artifact` v4).
+
+Los cambios que vengan se irán anotando aquí.
+
+## Descargar ![Build APK](https://github.com/Gainciarte/GBCG/actions/workflows/build-apk.yml/badge.svg)
+
+Cada cambio en `master` compila un APK de prueba (*debug*) en GitHub Actions:
+
+1. Entra a la pestaña [Actions](https://github.com/Gainciarte/GBCG/actions) del
+   repositorio, con tu cuenta de GitHub iniciada.
+2. Abre la última ejecución exitosa de **Build APK**.
+3. En **Artifacts**, descarga `gbcg` (un `.zip` con `gbcg-universal-debug.apk`).
+
+Para instalarlo en Android hay que permitir la instalación desde fuentes
+desconocidas en el navegador o el explorador de archivos que uses.
+
+## Compilar
+
+Requisitos: JDK 17, el SDK de Android con el NDK `25.2.9519653`, CMake y Ninja.
 
 ```sh
-./gradlew build
+git clone --recurse-submodules https://github.com/Gainciarte/GBCG.git
+cd GBCG
+./gradlew assembleDebug
 ```
 
-This will generate the apks in `app/build/outputs/apk/`.
+El APK queda en `app/build/outputs/apk/debug/` (`gbcg-universal-debug.apk` sirve
+para cualquier procesador).
+
+Si ya clonaste sin submódulos:
+
+```sh
+git submodule update --init --recursive
+```
+
+## Mantenerse al día con el original
+
+El repositorio original se agrega como `upstream`:
+
+```sh
+git remote add upstream https://github.com/philj56/gbcc-android.git   # solo la primera vez
+git fetch upstream
+git merge upstream/master
+```
+
+## Créditos y licencia
+
+- **GBCC y GBCC Android:** © 2017-2020 Philip Jones, con licencia MIT
+  ([gbcc.github.io](https://gbcc.github.io)). Todo el emulador es trabajo suyo.
+- **GBCG:** fork de Gustavo Inciarte, con la misma licencia MIT. Ver [LICENSE](LICENSE).
+
+Las ROM no se incluyen: usa copias de tus propios cartuchos.
