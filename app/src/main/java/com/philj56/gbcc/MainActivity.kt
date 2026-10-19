@@ -57,6 +57,13 @@ import java.util.zip.ZipOutputStream
 private const val BACK_DELAY: Int = 2000
 private const val SAVE_DIR: String = "saves"
 const val IMPORTED_SAVE_SUBDIR: String = "imported"
+private const val REQUEST_CREATE_FOLDER = "createFolder"
+private const val REQUEST_RENAME = "rename"
+
+// Extensions are matched ignoring case, so that e.g. "Tetris.GB" is listed too
+private val ROM_REGEX = Regex(".*\\.gbc?", RegexOption.IGNORE_CASE)
+private val IMPORTABLE_REGEX = Regex(".*\\.(gbc?|sav|s[0-9])", RegexOption.IGNORE_CASE)
+private val SAVE_EXTENSION_REGEX = Regex("sav|s[0-9]+", RegexOption.IGNORE_CASE)
 
 class MainActivity : BaseActivity() {
 
@@ -126,6 +133,21 @@ class MainActivity : BaseActivity() {
         changeDir(baseDir)
         updateFiles()
 
+        supportFragmentManager.setFragmentResultListener(REQUEST_CREATE_FOLDER, this) { _, result ->
+            result.getString(EditTextDialogFragment.RESULT_TEXT)?.let { createFolder(it) }
+        }
+        supportFragmentManager.setFragmentResultListener(REQUEST_RENAME, this) { _, result ->
+            val path = result.getString(EditTextDialogFragment.RESULT_PATH)
+            val name = result.getString(EditTextDialogFragment.RESULT_TEXT)
+            if (path != null && name != null) {
+                renameFile(File(path), name)
+            }
+        }
+        supportFragmentManager.setFragmentResultListener(
+            EditTextDialogFragment.dismissKey(REQUEST_RENAME),
+            this
+        ) { _, _ -> clearSelection() }
+
         // Check if the version has changed since last launch, and perform some setup if so
         Thread {
             val lastLaunchVersion = filesDir.resolve("lastLaunchVersion")
@@ -193,7 +215,7 @@ class MainActivity : BaseActivity() {
 
     private fun updateFiles() {
         val unsorted = currentDir.listFiles { file ->
-            file.name.matches(Regex(".*\\.gbc?")) or file.isDirectory
+            file.name.matches(ROM_REGEX) or file.isDirectory
         }
         files = unsorted?.sortedWith(
             compareBy(
@@ -283,10 +305,8 @@ class MainActivity : BaseActivity() {
             R.id.importItem -> selectImportFiles()
             R.id.settingsItem -> startActivity(Intent(this, SettingsActivity::class.java))
             R.id.folderItem -> {
-                val dialog = EditTextDialogFragment(R.string.create_folder, "") { name ->
-                    createFolder(name)
-                }
-                dialog.show(supportFragmentManager, "")
+                EditTextDialogFragment.newInstance(R.string.create_folder, "", REQUEST_CREATE_FOLDER)
+                    .show(supportFragmentManager, "")
             }
             R.id.exportItem -> selectExportDir()
             R.id.deleteItem -> {
@@ -363,13 +383,13 @@ class MainActivity : BaseActivity() {
     }
 
     private fun performDelete() {
+        // The selection can include files from other directories than the one shown,
+        // so don't rely on their position in the current list
         fileAdapter.selected.forEach { file ->
-            val index = files.indexOf(file)
-            files.removeAt(index)
             file.deleteRecursively()
-            fileAdapter.notifyItemRemoved(index)
         }
         clearSelection()
+        updateFiles()
     }
 
     private fun showDirectoryActionsDialog(file: File) {
@@ -433,7 +453,7 @@ class MainActivity : BaseActivity() {
             if (!ShortcutManagerCompat.isRequestPinShortcutSupported(this)) {
                 return@setOnClickListener
             }
-            val iconResource = if (file.extension == "gbc") {
+            val iconResource = if (file.extension.equals("gbc", ignoreCase = true)) {
                 R.drawable.ic_game_shortcut_gbc
             } else {
                 R.drawable.ic_game_shortcut_dmg
@@ -480,35 +500,40 @@ class MainActivity : BaseActivity() {
 
     private fun showRenameDialog(file: File) {
         selectionMode = SelectionMode.NORMAL
-        val dialog = EditTextDialogFragment(R.string.rename_rom, file.nameWithoutExtension) { name ->
-            if (file.isDirectory) {
-                file.renameTo(File("${file.parent}/$name"))
-                updateFiles()
-                return@EditTextDialogFragment
-            }
-            val configFile = filesDir.resolve("config/${file.nameWithoutExtension}.cfg")
-            val cheatFile = filesDir.resolve("config/${file.nameWithoutExtension}.cheats")
-            val savFile = filesDir.resolve("saves/${file.nameWithoutExtension}.sav")
-            if (configFile.exists()) {
-                configFile.renameTo(filesDir.resolve("config/$name.cfg"))
-            }
-            if (cheatFile.exists()) {
-                cheatFile.renameTo(filesDir.resolve("config/$name.cheats"))
-            }
-            if (savFile.exists()) {
-                savFile.renameTo(filesDir.resolve("saves/$name.sav"))
-            }
-            for (n in 0..10) {
-                val state = filesDir.resolve("saves/${file.nameWithoutExtension}.s$n")
-                if (state.exists()) {
-                    state.renameTo(filesDir.resolve("saves/$name.s$n"))
-                }
-            }
-            file.renameTo(File("${file.parent}/$name.${file.extension}"))
+        EditTextDialogFragment.newInstance(
+            R.string.rename_rom,
+            file.nameWithoutExtension,
+            REQUEST_RENAME,
+            file.path
+        ).show(supportFragmentManager, "")
+    }
+
+    private fun renameFile(file: File, name: String) {
+        if (file.isDirectory) {
+            file.renameTo(File("${file.parent}/$name"))
             updateFiles()
+            return
         }
-        dialog.setOnDismissListener { clearSelection() }
-        dialog.show(supportFragmentManager, "")
+        val configFile = filesDir.resolve("config/${file.nameWithoutExtension}.cfg")
+        val cheatFile = filesDir.resolve("config/${file.nameWithoutExtension}.cheats")
+        val savFile = filesDir.resolve("saves/${file.nameWithoutExtension}.sav")
+        if (configFile.exists()) {
+            configFile.renameTo(filesDir.resolve("config/$name.cfg"))
+        }
+        if (cheatFile.exists()) {
+            cheatFile.renameTo(filesDir.resolve("config/$name.cheats"))
+        }
+        if (savFile.exists()) {
+            savFile.renameTo(filesDir.resolve("saves/$name.sav"))
+        }
+        for (n in 0..10) {
+            val state = filesDir.resolve("saves/${file.nameWithoutExtension}.s$n")
+            if (state.exists()) {
+                state.renameTo(filesDir.resolve("saves/$name.s$n"))
+            }
+        }
+        file.renameTo(File("${file.parent}/$name.${file.extension}"))
+        updateFiles()
     }
 
     private fun showSaveDeleteDialog() {
@@ -525,8 +550,11 @@ class MainActivity : BaseActivity() {
     private fun performSaveDelete() {
         val saveDir = filesDir.resolve(SAVE_DIR)
         fileAdapter.selected.forEach { file ->
+            // Only this game's battery save and save states: a prefix match would also
+            // delete the saves of e.g. "Game 2" when deleting those of "Game"
+            val saveRegex = Regex(Regex.escape(file.nameWithoutExtension) + "\\.(sav|s[0-9]+)")
             saveDir.listFiles { _, name ->
-                name.startsWith(file.nameWithoutExtension)
+                name.matches(saveRegex)
             }?.forEach { save ->
                 save.delete()
             }
@@ -582,8 +610,15 @@ class MainActivity : BaseActivity() {
     }
 
     private fun importFile(uri: Uri) {
-        fun doCopy(input: InputStream, name: String) {
-            val dir = if (name.endsWith("sav")) {
+        fun doCopy(input: InputStream, entryName: String) {
+            // The core only looks for lowercase save extensions (".sav", ".s0"...)
+            val extension = File(entryName).extension
+            val name = if (extension.matches(SAVE_EXTENSION_REGEX)) {
+                entryName.dropLast(extension.length) + extension.lowercase()
+            } else {
+                entryName
+            }
+            val dir = if (name.endsWith(".sav")) {
                 filesDir.resolve(SAVE_DIR).resolve(IMPORTED_SAVE_SUBDIR)
             } else {
                 currentDir
@@ -604,7 +639,7 @@ class MainActivity : BaseActivity() {
                 }.use { zip ->
                     var entry = zip.nextEntry
                     while (entry != null) {
-                        if (entry.name.matches(Regex(".*\\.(gbc?|sav|s[0-9])"))) {
+                        if (entry.name.matches(IMPORTABLE_REGEX)) {
                             doCopy(zip, entry.name)
                         }
                         entry = zip.nextEntry
@@ -641,7 +676,7 @@ class MainActivity : BaseActivity() {
                     ).show()
                 }
             }
-            name.matches(Regex(".*\\.(gbc?|sav|s[0-9])")) -> {
+            name.matches(IMPORTABLE_REGEX) -> {
                 val iStream =
                     try {
                         contentResolver.openInputStream(uri)
@@ -657,7 +692,7 @@ class MainActivity : BaseActivity() {
             }
             contentResolver.getType(uri).equals("application/zip")
                     or contentResolver.getType(uri).equals("application/x-zip-compressed")
-                    or name.endsWith("zip") -> {
+                    or name.endsWith("zip", ignoreCase = true) -> {
                 val iStream =
                     try {
                         contentResolver.openInputStream(uri)
@@ -755,8 +790,13 @@ class MainActivity : BaseActivity() {
             }
             if (existing.size > 0) {
                 existing.sort()
-                val dialog = ImportOverwriteDialogFragment(existing)
-                dialog.show(supportFragmentManager, "")
+                // Fragments can only be shown from the main thread
+                runOnUiThread {
+                    if (!supportFragmentManager.isStateSaved) {
+                        ImportOverwriteDialogFragment.newInstance(existing)
+                            .show(supportFragmentManager, "")
+                    }
+                }
             } else {
                 importDir.delete()
             }

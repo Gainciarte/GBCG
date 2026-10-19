@@ -5,6 +5,7 @@ import android.app.AlertDialog
 import android.app.Dialog
 import android.os.Bundle
 import android.text.InputFilter
+import androidx.core.os.bundleOf
 import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
@@ -12,7 +13,18 @@ import com.philj56.gbcc.CheatActivity
 import com.philj56.gbcc.R
 import com.philj56.gbcc.databinding.DialogEditCheatBinding
 
-class CheatDialogFragment(private val index: Int) : DialogFragment() {
+class CheatDialogFragment : DialogFragment() {
+    companion object {
+        private const val ARG_INDEX = "index"
+
+        // index < 0 adds a new cheat. It goes in the arguments,
+        // so that Android can recreate the dialog e.g. after a rotation
+        fun newInstance(index: Int) = CheatDialogFragment().apply {
+            arguments = bundleOf(ARG_INDEX to index)
+        }
+    }
+
+    private val index get() = requireArguments().getInt(ARG_INDEX, -1)
     private var descriptionFilled = false
     private var codeFilled = false
 

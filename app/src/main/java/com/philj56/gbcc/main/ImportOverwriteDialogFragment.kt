@@ -6,15 +6,28 @@ import android.os.Bundle
 import android.widget.CheckedTextView
 import android.widget.ListView
 import android.widget.Toast
+import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.philj56.gbcc.IMPORTED_SAVE_SUBDIR
 import com.philj56.gbcc.R
 import java.io.File
 
-class ImportOverwriteDialogFragment(private val files: ArrayList<File>) : DialogFragment() {
+class ImportOverwriteDialogFragment : DialogFragment() {
+    companion object {
+        private const val ARG_FILES = "files"
+
+        // The files go in the arguments, so that Android can recreate the dialog
+        fun newInstance(files: List<File>) = ImportOverwriteDialogFragment().apply {
+            arguments = bundleOf(ARG_FILES to ArrayList(files.map { it.path }))
+        }
+    }
+
     @SuppressLint("InflateParams")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        val files = requireArguments().getStringArrayList(ARG_FILES)
+            ?.map { File(it) }
+            ?: emptyList()
         return activity?.let {
             val adapter = ImportOverwriteAdapter(
                 requireContext(),

@@ -311,8 +311,9 @@ Java_com_philj56_gbcc_GLActivity_loadRom(
 	gbcc_initialise(&gbc.core, fname);
 	if (!gbc.core.initialised) {
 		/* Something went wrong during initialisation */
+		/* saveDir is a Java string, not ours to free */
 		free(fname);
-		free(saveDir);
+		fname = nullptr;
 		logfile_end();
 		return static_cast<jboolean>(false);
 	}

@@ -60,27 +60,29 @@ class RemapActivity : BaseActivity() {
             ButtonInfo(KeyEvent.KEYCODE_SHIFT_RIGHT, "button_map_analogue_right", binding.buttonRemapRightStickMove, layers.findDrawableByLayerId(R.id.buttonRemapRightStickMoveBackground), true),
         )
 
-        val buttonNames = resources.getStringArray(R.array.button_map_names_array)
-        val buttonValues = resources.getStringArray(R.array.button_map_values_array)
-        val analogueNames = resources.getStringArray(R.array.button_map_analogue_names_array)
-        val analogueValues = resources.getStringArray(R.array.button_map_analogue_values_array)
         buttonInfoArray.forEach { buttonInfo ->
-            val key = prefs.getString(buttonInfo.mapKey, null) ?: "unmapped"
-
             buttonInfo.drawable.alpha = 0
-            if (buttonInfo.analogue) {
-                buttonInfo.button.text = analogueNames[analogueValues.indexOf(key)]
-            } else {
-                buttonInfo.button.text = buttonNames[buttonValues.indexOf(key)]
-            }
+            updateButtonText(buttonInfo.mapKey)
             buttonInfo.button.setOnClickListener {
-                RemapButtonDialogFragment(
-                    buttonInfo.button,
+                RemapButtonDialogFragment.newInstance(
                     buttonInfo.mapKey,
                     buttonInfo.analogue
                 ).show(supportFragmentManager, "")
             }
         }
+    }
+
+    // Show the current mapping of a button, e.g. after RemapButtonDialogFragment changes it
+    fun updateButtonText(mapKey: String) {
+        val buttonInfo = buttonInfoArray.firstOrNull { it.mapKey == mapKey } ?: return
+        val key = prefs.getString(mapKey, null) ?: "unmapped"
+        val (names, values) = if (buttonInfo.analogue) {
+            Pair(R.array.button_map_analogue_names_array, R.array.button_map_analogue_values_array)
+        } else {
+            Pair(R.array.button_map_names_array, R.array.button_map_values_array)
+        }
+        buttonInfo.button.text =
+            resources.getStringArray(names)[resources.getStringArray(values).indexOf(key)]
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {

@@ -19,6 +19,23 @@ El fork recién empieza. Por ahora, lo distinto del original es:
 - **Compilación automática:** la acción de GitHub que arma el APK se actualizó a
   las versiones vigentes de las acciones (`checkout`, `setup-java` y
   `upload-artifact` v4).
+- **Errores corregidos** (de una revisión completa del código de la app):
+  - Los botones táctiles y la cruceta ya no se quedan apretados cuando el sistema
+    corta el toque (un gesto desde el borde, la cortina de notificaciones).
+  - "Borrar partida" borra solo las partidas de ese juego: antes borraba también las
+    de cualquier juego cuyo nombre empezara igual.
+  - La app ya no se cierra al borrar archivos seleccionados después de entrar a otra
+    carpeta.
+  - Las ROM con extensión en mayúsculas (`.GB`, `.GBC`) aparecen en la lista y se
+    pueden importar.
+  - Los gatillos L2/R2 de un mando físico ya no se sueltan solos.
+  - Los diálogos (crear carpeta, renombrar, trucos, asignar botones del mando,
+    sobrescribir partidas importadas) ya no cierran la app al girar el teléfono.
+  - El aviso para sobrescribir partidas importadas se abre como corresponde.
+  - El sonido de la impresora y el hilo de la cámara se liberan al salir de cada
+    juego.
+  - Un error en el código en C podía corromper la memoria si fallaba la carga de
+    una ROM.
 
 Los cambios que vengan se irán anotando aquí.
 

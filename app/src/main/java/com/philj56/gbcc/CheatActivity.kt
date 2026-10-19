@@ -53,7 +53,7 @@ class CheatActivity : BaseActivity() {
         }
 
         binding.cheatList.setOnItemLongClickListener { _, _, position, _ ->
-            val dialog = CheatDialogFragment(position)
+            val dialog = CheatDialogFragment.newInstance(position)
             dialog.isCancelable = false
             dialog.show(supportFragmentManager, "")
             return@setOnItemLongClickListener true
@@ -71,7 +71,7 @@ class CheatActivity : BaseActivity() {
     }
 
     private fun showCheatDialog() {
-        val dialog = CheatDialogFragment(-1)
+        val dialog = CheatDialogFragment.newInstance(-1)
         dialog.isCancelable = false
         dialog.show(supportFragmentManager, "")
     }

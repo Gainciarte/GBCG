@@ -2,18 +2,30 @@ package com.philj56.gbcc.remap
 
 import android.app.Dialog
 import android.os.Bundle
-import android.widget.Button
 import android.widget.RadioGroup
 import androidx.core.content.edit
+import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.radiobutton.MaterialRadioButton
 import com.philj56.gbcc.R
+import com.philj56.gbcc.RemapActivity
 
-class RemapButtonDialogFragment(private val button: Button, private val key: String, private val analogue: Boolean) :
-    DialogFragment() {
+class RemapButtonDialogFragment : DialogFragment() {
+    companion object {
+        private const val ARG_KEY = "key"
+        private const val ARG_ANALOGUE = "analogue"
+
+        // The data goes in the arguments, so that Android can recreate the dialog
+        fun newInstance(key: String, analogue: Boolean) = RemapButtonDialogFragment().apply {
+            arguments = bundleOf(ARG_KEY to key, ARG_ANALOGUE to analogue)
+        }
+    }
+
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        val key = requireArguments().getString(ARG_KEY) ?: ""
+        val analogue = requireArguments().getBoolean(ARG_ANALOGUE)
         val prefs = PreferenceManager.getDefaultSharedPreferences(requireContext())
         val mapping = prefs.getString(key, "unmapped")
         val buttonNames: Array<String>
@@ -46,7 +58,7 @@ class RemapButtonDialogFragment(private val button: Button, private val key: Str
                     putString(key, buttonValues[radioGroup.checkedRadioButtonId])
                     apply()
                 }
-                button.text = buttonNames[radioGroup.checkedRadioButtonId]
+                (activity as? RemapActivity)?.updateButtonText(key)
             }
             .setNegativeButton(android.R.string.cancel) { _, _ -> }
             .setView(layout)

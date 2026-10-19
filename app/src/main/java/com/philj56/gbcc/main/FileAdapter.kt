@@ -42,7 +42,7 @@ class FileAdapter(
         fun bind(file: File) {
             currentFile = file
             itemView.isActivated = file in adapter.selected
-            when (file.extension) {
+            when (file.extension.lowercase()) {
                 "gbc" -> {
                     imageView.setImageResource(R.drawable.ic_file_gbc)
                     imageView.clearColorFilter()

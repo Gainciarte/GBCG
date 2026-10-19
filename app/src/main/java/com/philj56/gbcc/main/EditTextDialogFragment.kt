@@ -10,19 +10,50 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import androidx.core.view.postDelayed
 import androidx.core.widget.addTextChangedListener
+import androidx.core.os.bundleOf
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.setFragmentResult
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.philj56.gbcc.R
 
-class EditTextDialogFragment(
-    private val title: Int,
-    private val initialText: String,
-    private val onConfirm: (String) -> Unit
-) : DialogFragment() {
-    private var onDismissListener: (() -> Unit)? = null
+/*
+ * The text is delivered as a fragment result under the request key (plus the path, if one was
+ * given), and an empty result under dismissKey(requestKey) when the dialog closes.
+ * Everything goes through the arguments, so that Android can recreate the dialog
+ * e.g. after a rotation.
+ */
+class EditTextDialogFragment : DialogFragment() {
+    companion object {
+        const val RESULT_TEXT = "text"
+        const val RESULT_PATH = "path"
+        private const val ARG_TITLE = "title"
+        private const val ARG_INITIAL_TEXT = "initialText"
+        private const val ARG_REQUEST_KEY = "requestKey"
+        private const val ARG_PATH = "path"
+
+        fun dismissKey(requestKey: String) = "$requestKey.dismiss"
+
+        fun newInstance(title: Int, initialText: String, requestKey: String, path: String? = null) =
+            EditTextDialogFragment().apply {
+                arguments = bundleOf(
+                    ARG_TITLE to title,
+                    ARG_INITIAL_TEXT to initialText,
+                    ARG_REQUEST_KEY to requestKey,
+                    ARG_PATH to path
+                )
+            }
+    }
+
+    private val requestKey get() = requireArguments().getString(ARG_REQUEST_KEY) ?: ""
 
     @SuppressLint("InflateParams")
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        val title = requireArguments().getInt(ARG_TITLE)
+        val initialText = requireArguments().getString(ARG_INITIAL_TEXT) ?: ""
+        val path = requireArguments().getString(ARG_PATH)
+        val onConfirm = { text: String ->
+            setFragmentResult(requestKey, bundleOf(RESULT_TEXT to text, RESULT_PATH to path))
+        }
         return activity?.let {
             val textView = it.layoutInflater.inflate(R.layout.dialog_create_folder, null, false)
             val input = textView?.findViewById<EditText>(R.id.createFolderInput)
@@ -61,11 +92,7 @@ class EditTextDialogFragment(
     }
 
     override fun onDismiss(dialog: DialogInterface) {
-        onDismissListener?.invoke()
+        setFragmentResult(dismissKey(requestKey), Bundle())
         super.onDismiss(dialog)
-    }
-
-    fun setOnDismissListener(listener: () -> Unit) {
-        onDismissListener = listener
     }
 }

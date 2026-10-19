@@ -340,7 +340,9 @@ class GLActivity : BaseActivity(), SensorEventListener {
                         button.view.isPressed = true && animateButtons
                         hapticVibrate(button.view, true)
                     }
-                    MotionEvent.ACTION_UP -> {
+                    // ACTION_CANCEL arrives when the system steals the touch
+                    // (e.g. an edge gesture), and must release the buttons too
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                         buttons.forEach { button2 ->
                             val lastPressed = button2.isPressed
                             if (button2 == button) {
@@ -530,7 +532,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
             when (prefs.getString("skin", "auto")) {
                 "dmg" -> false
                 "gbc" -> true
-                else -> filename.endsWith("gbc")
+                else -> filename.endsWith("gbc", ignoreCase = true)
             }
         )
 
@@ -649,7 +651,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
                         }
                     }
                 }
-                MotionEvent.ACTION_UP -> {
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     updateDpad(0)
                     hapticVibrate(view, false)
                     if (animateButtons) {
@@ -828,6 +830,13 @@ class GLActivity : BaseActivity(), SensorEventListener {
 
     override fun onDestroy() {
         destroyTileset()
+        if (::printerAudio.isInitialized) {
+            printerAudio.release()
+        }
+        if (::printerPaperTearSound.isInitialized) {
+            printerPaperTearSound.release()
+        }
+        executor.shutdown()
         super.onDestroy()
     }
 
@@ -1086,8 +1095,14 @@ class GLActivity : BaseActivity(), SensorEventListener {
 
             val lt = event.getAxisValue(MotionEvent.AXIS_LTRIGGER) > 0f
             val rt = event.getAxisValue(MotionEvent.AXIS_RTRIGGER) > 0f
-            gamepadPress(KeyEvent.KEYCODE_BUTTON_L2, lt && !lastLeftTrigger)
-            gamepadPress(KeyEvent.KEYCODE_BUTTON_R2, rt && !lastRightTrigger)
+            // Only send trigger changes, otherwise every joystick event
+            // would release a held trigger
+            if (lt != lastLeftTrigger) {
+                gamepadPress(KeyEvent.KEYCODE_BUTTON_L2, lt)
+            }
+            if (rt != lastRightTrigger) {
+                gamepadPress(KeyEvent.KEYCODE_BUTTON_R2, rt)
+            }
             lastLeftTrigger = lt
             lastRightTrigger = rt
         }
