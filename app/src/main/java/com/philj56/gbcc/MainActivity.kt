@@ -157,9 +157,6 @@ class MainActivity : BaseActivity() {
                 lastLaunchVersion.createNewFile()
                 lastLaunchVersion.writeText("${BuildConfig.VERSION_CODE}\n")
 
-                baseDir.resolve("Tutorial.gbc").outputStream().use {
-                    assets.open("Tutorial.gbc").copyTo(it)
-                }
                 assets.list("shaders")?.forEach { shader ->
                     File("$filesDir/shaders").mkdirs()
                     assets.open("shaders/$shader").use { iStream ->
@@ -167,7 +164,6 @@ class MainActivity : BaseActivity() {
                         FileOutputStream(file).use { iStream.copyTo(it) }
                     }
                 }
-                runOnUiThread { updateFiles() }
             }
         }.start()
     }

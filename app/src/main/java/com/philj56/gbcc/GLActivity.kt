@@ -1321,7 +1321,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
         }
         binding.printerSaveButton.setOnClickListener {
             val date = SimpleDateFormat("yyyy-MM-dd'T'HHmmss").format(Date())
-            printerExport.launch("gbcc_printer_$date.png")
+            printerExport.launch("gbcg_printer_$date.png")
         }
         printerPaperTearSound = SoundPool.Builder()
             .setMaxStreams(1)

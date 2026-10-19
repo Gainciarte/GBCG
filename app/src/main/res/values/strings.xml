@@ -1,6 +1,6 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name">GBCG</string>
-    <string name="launch_game_intent">com.philj56.gbcc.launch_game</string>
+    <string name="launch_game_intent">io.github.gainciarte.gbcg.launch_game</string>
 
     <!-- MainActivity -->
     <string name="base_directory_name">Files</string>
@@ -16,6 +16,7 @@
     <string name="rename_rom">Rename ROM</string>
     <string name="select_items">Select files</string>
     <string name="select_destination">Select destination</string>
+    <string name="more_options">More options</string>
     <string name="delete">Delete</string>
     <plurals name="delete_confirmation">
         <item quantity="one">Are you sure you wish to delete this item?</item>
@@ -127,11 +128,11 @@
     <string name="settings_dmg_color_dark">Dark</string>
 
     <string name="settings_color">GBC colour</string>
-    <string name="settings_color_berry">Berry</string>
-    <string name="settings_color_dandelion">Dandelion</string>
-    <string name="settings_color_grape">Grape</string>
-    <string name="settings_color_kiwi">Kiwi</string>
-    <string name="settings_color_teal">Teal</string>
+    <string name="settings_color_berry">Red</string>
+    <string name="settings_color_dandelion">Yellow</string>
+    <string name="settings_color_grape">Purple</string>
+    <string name="settings_color_kiwi">Green</string>
+    <string name="settings_color_teal">Blue-green</string>
 
     <string name="settings_audio_volume">Volume</string>
     <string name="settings_audio_printer_volume">Printer volume</string>

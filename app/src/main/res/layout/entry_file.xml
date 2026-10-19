@@ -22,7 +22,7 @@
 
         <TextView
             android:id="@+id/fileEntry"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="1"
             android:gravity="center|start"
@@ -30,6 +30,19 @@
             android:paddingEnd="8dp"
             android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="@color/file_entry_text" />
+
+        <!-- Opens the same actions as a long press -->
+        <ImageButton
+            android:id="@+id/fileMore"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="4dp"
+            android:layout_weight="0"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/more_options"
+            app:srcCompat="@drawable/ic_dots_vertical_24dp"
+            app:tint="@color/file_entry_text" />
     </LinearLayout>
 
     <ImageView

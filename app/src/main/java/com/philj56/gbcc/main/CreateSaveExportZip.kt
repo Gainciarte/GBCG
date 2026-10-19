@@ -15,7 +15,7 @@ class CreateSaveExportZip : ActivityResultContracts.CreateDocument("application/
             addCategory(Intent.CATEGORY_OPENABLE)
         }
         val date = SimpleDateFormat("yyyyMMdd").format(Date())
-        intent.putExtra(Intent.EXTRA_TITLE, "gbcc_saves_$date.zip")
+        intent.putExtra(Intent.EXTRA_TITLE, "gbcg_saves_$date.zip")
         return intent
     }
 }

@@ -116,13 +116,15 @@
 
 
     <string-array name="license_names_array">
+        <item>GBCG</item>
         <item>AndroidX</item>
-        <item>GBCC</item>
+        <item>GBCC (emulator core)</item>
         <item>Material Components for Android</item>
         <item>Material Design Icons</item>
     </string-array>
 
     <string-array name="license_values_array">
+        <item>gbcg</item>
         <item>apache-2.0</item>
         <item>gbcc</item>
         <item>apache-2.0</item>

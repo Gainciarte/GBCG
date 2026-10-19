@@ -3,6 +3,7 @@ package com.philj56.gbcc.main
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
@@ -36,6 +37,12 @@ class FileAdapter(
                     onLongClick(it, itemView)
                 }
                 return@setOnLongClickListener true
+            }
+            // The ⋮ button opens the same actions as a long press
+            itemView.findViewById<ImageButton>(R.id.fileMore).setOnClickListener {
+                currentFile?.let {
+                    onLongClick(it, itemView)
+                }
             }
         }
 

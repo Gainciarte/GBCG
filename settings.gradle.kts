@@ -16,5 +16,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "gbcc"
+rootProject.name = "gbcg"
 include(":app")

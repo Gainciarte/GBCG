@@ -12,7 +12,14 @@ reemplazarlo, porque tiene su propio identificador (`io.github.gainciarte.gbcg`)
 
 El fork recién empieza. Por ahora, lo distinto del original es:
 
-- **Nombre e identificador propios:** la app se llama GBCG y se instala aparte de GBCC.
+- **Nombre, ícono e identificador propios:** la app se llama GBCG, se instala
+  aparte de GBCC y tiene su propio ícono (una consola gris con una "G" en la
+  pantalla, generado con [`sources/make_icon.py`](sources/make_icon.py)). Los
+  colores de la carcasa usan nombres genéricos, y los archivos exportados se llaman
+  `gbcg_saves_….zip` y `gbcg_printer_….png`.
+- **Lista de archivos:** cada ROM y carpeta tiene un botón ⋮ que abre sus opciones
+  (antes solo se abrían manteniendo presionado, lo que también sigue funcionando).
+  Ya no se incluye la ROM tutorial de GBCC.
 - **Reportes de errores:** cuando el emulador falla, el botón "Send feedback" abre
   el correo con el registro del error, pero sin destinatario. En el original iba al
   correo del autor, y los errores de este fork no deberían llegarle a él.
@@ -84,6 +91,7 @@ git merge upstream/master
 
 - **GBCC y GBCC Android:** © 2017-2020 Philip Jones, con licencia MIT
   ([gbcc.github.io](https://gbcc.github.io)). Todo el emulador es trabajo suyo.
-- **GBCG:** fork de Gustavo Inciarte, con la misma licencia MIT. Ver [LICENSE](LICENSE).
+- **GBCG:** cambios © 2026 Gustavo Inciarte, con la misma licencia MIT. Ver
+  [LICENSE](LICENSE); la app muestra ambas licencias en Settings > Miscellaneous > Licenses.
 
 Las ROM no se incluyen: usa copias de tus propios cartuchos.

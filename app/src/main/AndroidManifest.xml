@@ -48,7 +48,7 @@
 			android:immersive="true"
 			android:exported="true">
 			<intent-filter>
-				<action android:name="com.philj56.gbcc.launch_game" />
+				<action android:name="io.github.gainciarte.gbcg.launch_game" />
 				<category android:name="android.intent.category.DEFAULT" />
 			</intent-filter>
 		</activity>
