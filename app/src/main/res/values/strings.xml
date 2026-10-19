@@ -1,6 +1,5 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="app_name">GBCC</string>
-    <string name="application_id">com.philj56.gbcc</string>
+    <string name="app_name">GBCG</string>
     <string name="launch_game_intent">com.philj56.gbcc.launch_game</string>
 
     <!-- MainActivity -->
@@ -51,7 +50,7 @@
 
     <string name="quit_confirmation">Are you sure you want to quit?</string>
     <string name="invalid_opcode_title">Invalid Opcode</string>
-    <string name="invalid_opcode_description">GBCC has encountered an error, and will now stop. This could either be due to an error in the ROM you were trying to run, or a bug in GBCC. To see a more detailed report or report this issue, press \"Send feedback\".</string>
+    <string name="invalid_opcode_description">GBCG has encountered an error, and will now stop. This could either be due to an error in the ROM you were trying to run, or a bug in GBCG. To see a more detailed report or report this issue, press \"Send feedback\".</string>
     <string name="button_send_feedback">Send feedback</string>
     <string name="button_quit">Quit</string>
     <string name="button_reboot">Reboot</string>

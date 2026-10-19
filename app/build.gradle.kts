@@ -6,14 +6,15 @@ plugins {
 }
 
 base {
-	archivesName.set("gbcc")
+	archivesName.set("gbcg")
 }
 
 android {
 	compileSdk = 33
 	buildToolsVersion = "33.0.0"
 	defaultConfig {
-		applicationId = "com.philj56.gbcc"
+		applicationId = "io.github.gainciarte.gbcg"
+		resValue("string", "application_id", "io.github.gainciarte.gbcg")
 		minSdk = 21
 		targetSdk = 33
 		versionCode = 41
@@ -46,6 +47,7 @@ android {
 		debug {
 			isMinifyEnabled = false
 			applicationIdSuffix = ".debug"
+			resValue("string", "application_id", "io.github.gainciarte.gbcg.debug")
 		}
 	}
 	buildFeatures {

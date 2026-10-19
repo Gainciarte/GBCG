@@ -250,10 +250,6 @@ class GLActivity : BaseActivity(), SensorEventListener {
                     .setPositiveButton(R.string.button_send_feedback) { _, _ ->
                         val intent = Intent(Intent.ACTION_SENDTO).apply {
                             data = Uri.parse("mailto:")
-                            putExtra(
-                                Intent.EXTRA_EMAIL,
-                                arrayOf("gbcc.emu+invalid_opcode@gmail.com")
-                            )
                             putExtra(Intent.EXTRA_SUBJECT, "Bug report")
                             putExtra(
                                 Intent.EXTRA_TEXT,
