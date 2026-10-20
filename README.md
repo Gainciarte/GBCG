@@ -67,6 +67,10 @@ El fork recién empieza. Por ahora, lo distinto del original es:
   `SkinPreviewTest` dibuja todas las carcasas en el PC, con el código de dibujo de
   Android (Robolectric), en `app/build/skin-previews`:
   `./gradlew testDebugUnitTest --tests "*SkinPreviewTest*"`.
+- **Fuente propia:** la app (lista de juegos, ajustes, diálogos y menús) usa Nunito, una
+  letra redondeada y legible, en Regular, SemiBold y Bold, generadas de la versión
+  variable con [`sources/make_font.py`](sources/make_font.py). El menú dentro del juego
+  sigue con la fuente del núcleo.
 - **Ajustes reorganizados:** Controls, Picture, Sound, Advanced y About (versión,
   código fuente y licencias), en vez de las cinco categorías originales. Un solo
   ajuste de color pinta la carcasa y la app.
@@ -148,5 +152,8 @@ git merge upstream/master
   ([gbcc.github.io](https://gbcc.github.io)). Todo el emulador es trabajo suyo.
 - **GBCG:** cambios © 2026 Gustavo Inciarte, con la misma licencia MIT. Ver
   [LICENSE](LICENSE); la app muestra ambas licencias en Settings > Miscellaneous > Licenses.
+
+- **Nunito:** © 2014 The Nunito Project Authors, con licencia SIL Open Font License 1.1
+  (también en la pantalla de licencias).
 
 Las ROM no se incluyen: usa copias de tus propios cartuchos.

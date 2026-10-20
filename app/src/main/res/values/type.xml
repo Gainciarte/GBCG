@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The app's typeface, Nunito, on Material 3's type scale (whose styles set their own
+         typeface, so each one is redefined) and on the platform's text appearances, which
+         the settings screens and lists use. Titles and labels take the semibold weight. -->
+    <style name="TextAppearance.GBCG.DisplayLarge" parent="TextAppearance.Material3.DisplayLarge">
+        <item name="fontFamily">@font/nunito</item>
+        <item name="android:fontFamily">@font/nunito</item>
+    </style>
+    <style name="TextAppearance.GBCG.DisplayMedium" parent="TextAppearance.Material3.DisplayMedium">
+        <item name="fontFamily">@font/nunito</item>
+        <item name="android:fontFamily">@font/nunito</item>
+    </style>
+    <style name="TextAppearance.GBCG.DisplaySmall" parent="TextAppearance.Material3.DisplaySmall">
+        <item name="fontFamily">@font/nunito</item>
+        <item name="android:fontFamily">@font/nunito</item>
+    </style>
+    <style name="TextAppearance.GBCG.HeadlineLarge" parent="TextAppearance.Material3.HeadlineLarge">
+        <item name="fontFamily">@font/nunito</item>
+        <item name="android:fontFamily">@font/nunito</item>
+    </style>
+    <style name="TextAppearance.GBCG.HeadlineMedium" parent="TextAppearance.Material3.HeadlineMedium">
+        <item name="fontFamily">@font/nunito</item>
+        <item name="android:fontFamily">@font/nunito</item>
+    </style>
+    <style name="TextAppearance.GBCG.HeadlineSmall" parent="TextAppearance.Material3.HeadlineSmall">
+        <item name="fontFamily">@font/nunito</item>
+        <item name="android:fontFamily">@font/nunito</item>
+    </style>
+    <style name="TextAppearance.GBCG.TitleLarge" parent="TextAppearance.Material3.TitleLarge">
+        <item name="fontFamily">@font/nunito</item>
+        <item name="android:fontFamily">@font/nunito</item>
+    </style>
+    <style name="TextAppearance.GBCG.TitleMedium" parent="TextAppearance.Material3.TitleMedium">
+        <item name="fontFamily">@font/nunito_semibold</item>
+        <item name="android:fontFamily">@font/nunito_semibold</item>
+    </style>
+    <style name="TextAppearance.GBCG.TitleSmall" parent="TextAppearance.Material3.TitleSmall">
+        <item name="fontFamily">@font/nunito_semibold</item>
+        <item name="android:fontFamily">@font/nunito_semibold</item>
+    </style>
+    <style name="TextAppearance.GBCG.BodyLarge" parent="TextAppearance.Material3.BodyLarge">
+        <item name="fontFamily">@font/nunito</item>
+        <item name="android:fontFamily">@font/nunito</item>
+    </style>
+    <style name="TextAppearance.GBCG.BodyMedium" parent="TextAppearance.Material3.BodyMedium">
+        <item name="fontFamily">@font/nunito</item>
+        <item name="android:fontFamily">@font/nunito</item>
+    </style>
+    <style name="TextAppearance.GBCG.BodySmall" parent="TextAppearance.Material3.BodySmall">
+        <item name="fontFamily">@font/nunito</item>
+        <item name="android:fontFamily">@font/nunito</item>
+    </style>
+    <style name="TextAppearance.GBCG.LabelLarge" parent="TextAppearance.Material3.LabelLarge">
+        <item name="fontFamily">@font/nunito_semibold</item>
+        <item name="android:fontFamily">@font/nunito_semibold</item>
+    </style>
+    <style name="TextAppearance.GBCG.LabelMedium" parent="TextAppearance.Material3.LabelMedium">
+        <item name="fontFamily">@font/nunito_semibold</item>
+        <item name="android:fontFamily">@font/nunito_semibold</item>
+    </style>
+    <style name="TextAppearance.GBCG.LabelSmall" parent="TextAppearance.Material3.LabelSmall">
+        <item name="fontFamily">@font/nunito_semibold</item>
+        <item name="android:fontFamily">@font/nunito_semibold</item>
+    </style>
+    <style name="TextAppearance.GBCG.Small" parent="TextAppearance.AppCompat.Small">
+        <item name="fontFamily">@font/nunito</item>
+        <item name="android:fontFamily">@font/nunito</item>
+    </style>
+    <style name="TextAppearance.GBCG.Medium" parent="TextAppearance.AppCompat.Medium">
+        <item name="fontFamily">@font/nunito</item>
+        <item name="android:fontFamily">@font/nunito</item>
+    </style>
+    <style name="TextAppearance.GBCG.Large" parent="TextAppearance.AppCompat.Large">
+        <item name="fontFamily">@font/nunito</item>
+        <item name="android:fontFamily">@font/nunito</item>
+    </style>
+    <style name="TextAppearance.GBCG.Plain" parent="TextAppearance.AppCompat">
+        <item name="fontFamily">@font/nunito</item>
+        <item name="android:fontFamily">@font/nunito</item>
+    </style>
+    <style name="TextAppearance.GBCG.ListItem" parent="TextAppearance.AppCompat.Subhead">
+        <item name="fontFamily">@font/nunito</item>
+        <item name="android:fontFamily">@font/nunito</item>
+    </style>
+    <style name="TextAppearance.GBCG.ListItemSecondary" parent="TextAppearance.AppCompat.Body1">
+        <item name="fontFamily">@font/nunito</item>
+        <item name="android:fontFamily">@font/nunito</item>
+    </style>
+
+    <!-- Nunito everywhere: what both Base.Theme.GBCC (values, values-v23) inherit -->
+    <style name="Typography.GBCC" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="android:fontFamily">@font/nunito</item>
+        <item name="fontFamily">@font/nunito</item>
+        <item name="textAppearanceDisplayLarge">@style/TextAppearance.GBCG.DisplayLarge</item>
+        <item name="textAppearanceDisplayMedium">@style/TextAppearance.GBCG.DisplayMedium</item>
+        <item name="textAppearanceDisplaySmall">@style/TextAppearance.GBCG.DisplaySmall</item>
+        <item name="textAppearanceHeadlineLarge">@style/TextAppearance.GBCG.HeadlineLarge</item>
+        <item name="textAppearanceHeadlineMedium">@style/TextAppearance.GBCG.HeadlineMedium</item>
+        <item name="textAppearanceHeadlineSmall">@style/TextAppearance.GBCG.HeadlineSmall</item>
+        <item name="textAppearanceTitleLarge">@style/TextAppearance.GBCG.TitleLarge</item>
+        <item name="textAppearanceTitleMedium">@style/TextAppearance.GBCG.TitleMedium</item>
+        <item name="textAppearanceTitleSmall">@style/TextAppearance.GBCG.TitleSmall</item>
+        <item name="textAppearanceBodyLarge">@style/TextAppearance.GBCG.BodyLarge</item>
+        <item name="textAppearanceBodyMedium">@style/TextAppearance.GBCG.BodyMedium</item>
+        <item name="textAppearanceBodySmall">@style/TextAppearance.GBCG.BodySmall</item>
+        <item name="textAppearanceLabelLarge">@style/TextAppearance.GBCG.LabelLarge</item>
+        <item name="textAppearanceLabelMedium">@style/TextAppearance.GBCG.LabelMedium</item>
+        <item name="textAppearanceLabelSmall">@style/TextAppearance.GBCG.LabelSmall</item>
+        <item name="android:textAppearance">@style/TextAppearance.GBCG.Plain</item>
+        <item name="android:textAppearanceSmall">@style/TextAppearance.GBCG.Small</item>
+        <item name="android:textAppearanceMedium">@style/TextAppearance.GBCG.Medium</item>
+        <item name="android:textAppearanceLarge">@style/TextAppearance.GBCG.Large</item>
+        <item name="android:textAppearanceListItem">@style/TextAppearance.GBCG.ListItem</item>
+        <item name="android:textAppearanceListItemSmall">@style/TextAppearance.GBCG.ListItem</item>
+        <item name="android:textAppearanceListItemSecondary">@style/TextAppearance.GBCG.ListItemSecondary</item>
+    </style>
+</resources>
