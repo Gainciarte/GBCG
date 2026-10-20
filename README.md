@@ -20,6 +20,10 @@ El fork recién empieza. Por ahora, lo distinto del original es:
 - **Lista de archivos:** cada ROM y carpeta tiene un botón ⋮ que abre sus opciones
   (antes solo se abrían manteniendo presionado, lo que también sigue funcionando).
   Ya no se incluye la ROM tutorial de GBCC.
+- **Android 16 (API 36):** la app apunta a la versión que exige Google Play desde
+  agosto de 2026, con herramientas al día (Android Gradle Plugin 8.13, Gradle 8.14,
+  Kotlin 2.2), el núcleo compilado con el NDK r28 (alineado a páginas de 16 KB) y
+  las pantallas adaptadas al modo de borde a borde de Android 15.
 - **Reportes de errores:** cuando el emulador falla, el botón "Send feedback" abre
   el correo con el registro del error, pero sin destinatario. En el original iba al
   correo del autor, y los errores de este fork no deberían llegarle a él.
@@ -60,7 +64,8 @@ desconocidas en el navegador o el explorador de archivos que uses.
 
 ## Compilar
 
-Requisitos: JDK 17, el SDK de Android con el NDK `25.2.9519653`, CMake y Ninja.
+Requisitos: JDK 17 y el SDK de Android con la plataforma 36, el NDK
+`28.2.13676358` y CMake 3.22.1 (Gradle y sus plugins los baja el propio proyecto).
 
 ```sh
 git clone --recurse-submodules https://github.com/Gainciarte/GBCG.git

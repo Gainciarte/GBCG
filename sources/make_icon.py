@@ -31,22 +31,31 @@ SCREEN = "#A7C957"
 LETTER = "#2E4A1E"
 CONTROLS = "#33373D"
 
-# Geometry, in the 108x108 adaptive icon viewport. Launchers may mask
-# everything outside the central circle of diameter 66 (radius 33 around
-# 54,54), so every shape below stays inside it.
-BEZEL_RECT = (33, 29, 42, 29, 4)         # x, y, width, height, corner radius
-SCREEN_RECT = (41, 32, 26, 23.4, 1)      # 10:9, like the original screen
-LETTER_CENTRE = (54, 43.7)
-LETTER_RADIUS = 6.6
-LETTER_STROKE = 3.2
+# Geometry, in the 108x108 adaptive icon viewport. Square and rounded-square
+# masks (like MIUI's) show about the central 72x72 (18 to 90); a circular mask
+# shows only the central circle of diameter 66, which clips the bezel's corners.
+VISIBLE = (18, 90)
+EDGE_GAP = 9                             # bezel to icon edge, the same at the top and sides
+BEZEL_PAD_X = 11                         # bezel around the screen: wide at the sides,
+BEZEL_PAD_Y = 3.2                        # narrow above and below, like the original Game Boy
+BEZEL_RADIUS = 4
+BEZEL_W = VISIBLE[1] - VISIBLE[0] - 2 * EDGE_GAP
+SCREEN_W = BEZEL_W - 2 * BEZEL_PAD_X
+SCREEN_H = SCREEN_W * 9 / 10             # 10:9, like the original screen
+BEZEL_RECT = (VISIBLE[0] + EDGE_GAP, VISIBLE[0] + EDGE_GAP,
+              BEZEL_W, SCREEN_H + 2 * BEZEL_PAD_Y, BEZEL_RADIUS)  # x, y, width, height, radius
+SCREEN_RECT = (BEZEL_RECT[0] + BEZEL_PAD_X, BEZEL_RECT[1] + BEZEL_PAD_Y, SCREEN_W, SCREEN_H, 1.2)
+LETTER_CENTRE = (54, SCREEN_RECT[1] + SCREEN_H / 2)
+LETTER_RADIUS = SCREEN_W * 0.255
+LETTER_STROKE = SCREEN_W * 0.122
 LETTER_OPENING = 45                      # degrees of the gap above the bar
-DPAD_CENTRE = (40.5, 69)
-DPAD_ARM = 6                             # half the length of each arm
-DPAD_HALF_WIDTH = 2.1
-BUTTON_B = (63.5, 72, 3.6)               # x, y, radius
-BUTTON_A = (71.5, 67, 3.6)
-SELECT_RECT = (45.5, 78.5, 6, 2.2, 1.1)
-START_RECT = (56.5, 78.5, 6, 2.2, 1.1)
+DPAD_CENTRE = (38.5, 71.5)
+DPAD_ARM = 5.6                           # half the length of each arm
+DPAD_HALF_WIDTH = 1.95
+BUTTON_B = (65, 74, 3.4)                 # x, y, radius
+BUTTON_A = (72.5, 69.5, 3.4)
+SELECT_RECT = (45.5, 82, 6, 2.2, 1.1)
+START_RECT = (56.5, 82, 6, 2.2, 1.1)
 
 
 def rounded_rect_path(x, y, w, h, r):

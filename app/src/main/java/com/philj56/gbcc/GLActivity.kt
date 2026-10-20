@@ -173,6 +173,9 @@ class GLActivity : BaseActivity(), SensorEventListener {
 
     private lateinit var binding: ActivityGlBinding
 
+    // The system bars are hidden, so only keep clear of the display cutout
+    override val insetTypes = WindowInsetsCompat.Type.displayCutout()
+
     private external fun chdir(dirName: String)
     private external fun checkRom(file: String): Boolean
     private external fun loadRom(
@@ -1313,7 +1316,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
                             bitmap.setPixel(x, y, Color.argb(255, px, px, px))
                         }
                     }
-                    contentResolver.openOutputStream(uri).use { stream ->
+                    contentResolver.openOutputStream(uri)?.use { stream ->
                         bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream)
                     }
                 }

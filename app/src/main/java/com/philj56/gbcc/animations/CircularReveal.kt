@@ -13,8 +13,8 @@ class CircularReveal : Visibility() {
     override fun onAppear(
         sceneRoot: ViewGroup,
         view: View,
-        startValues: TransitionValues,
-        endValues: TransitionValues
+        startValues: TransitionValues?,
+        endValues: TransitionValues?
     ): Animator {
         val animator = ViewAnimationUtils.createCircularReveal(
             view,
@@ -33,8 +33,8 @@ class CircularReveal : Visibility() {
     override fun onDisappear(
         sceneRoot: ViewGroup,
         view: View,
-        startValues: TransitionValues,
-        endValues: TransitionValues
+        startValues: TransitionValues?,
+        endValues: TransitionValues?
     ): Animator {
         return ViewAnimationUtils.createCircularReveal(
             view,

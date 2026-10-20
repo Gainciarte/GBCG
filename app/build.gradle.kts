@@ -1,5 +1,7 @@
 @file:Suppress("UnstableApiUsage")
 
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
 	id("com.android.application") apply true
 	kotlin("android") apply true
@@ -10,13 +12,13 @@ base {
 }
 
 android {
-	compileSdk = 33
-	buildToolsVersion = "33.0.0"
+	compileSdk = 36
+	buildToolsVersion = "36.0.0"
 	defaultConfig {
 		applicationId = "io.github.gainciarte.gbcg"
 		resValue("string", "application_id", "io.github.gainciarte.gbcg")
 		minSdk = 21
-		targetSdk = 33
+		targetSdk = 36
 		versionCode = 41
 		versionName = "beta41"
 		testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -32,6 +34,9 @@ android {
 			abi {
 				isEnable = true
 				isUniversalApk = true
+				// The ABIs the NDK still supports (r28 dropped armeabi and mips)
+				reset()
+				include("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
 			}
 		}
 	}
@@ -65,35 +70,29 @@ android {
 		targetCompatibility = JavaVersion.VERSION_17
 	}
 
-	kotlinOptions {
-		jvmTarget = JavaVersion.VERSION_17.toString()
-	}
-
-	ndkVersion = "25.2.9519653"
+	// r28 or later aligns the native library to 16 KB pages, which Google Play
+	// requires for apps targeting Android 15 or higher
+	ndkVersion = "28.2.13676358"
 	namespace = "com.philj56.gbcc"
+}
+
+kotlin {
+	compilerOptions {
+		jvmTarget.set(JvmTarget.JVM_17)
+	}
 }
 
 dependencies {
 	implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
-	implementation("androidx.camera:camera-core:1.2.2")
-	implementation("androidx.camera:camera-camera2:1.2.2")
-	implementation("androidx.camera:camera-lifecycle:1.2.2")
-	implementation("androidx.core:core-ktx:1.10.0")
-	implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-	implementation("androidx.coordinatorlayout:coordinatorlayout:1.2.0")
-	implementation("androidx.preference:preference-ktx:1.2.0")
-	implementation("androidx.recyclerview:recyclerview:1.3.0")
-	implementation("com.google.android.material:material:1.8.0")
-
-	// Needed temporarily to work around dependency issues
-	constraints {
-		implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1") {
-			because("Two dependencies have conflicting versions of this.")
-		}
-		implementation("androidx.lifecycle:lifecycle-viewmodel:2.6.1") {
-			because("Get your shit together Google.")
-		}
-	}
+	implementation("androidx.camera:camera-core:1.4.2")
+	implementation("androidx.camera:camera-camera2:1.4.2")
+	implementation("androidx.camera:camera-lifecycle:1.4.2")
+	implementation("androidx.core:core-ktx:1.17.0")
+	implementation("androidx.constraintlayout:constraintlayout:2.2.1")
+	implementation("androidx.coordinatorlayout:coordinatorlayout:1.3.0")
+	implementation("androidx.preference:preference-ktx:1.2.1")
+	implementation("androidx.recyclerview:recyclerview:1.4.0")
+	implementation("com.google.android.material:material:1.12.0")
 	testImplementation("junit:junit:4.13.2")
 	androidTestImplementation("androidx.test:runner:1.5.2")
 	androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")

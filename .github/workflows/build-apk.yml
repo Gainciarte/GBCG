@@ -36,9 +36,12 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: 'gradle'
 
+      # Only the debug APK is uploaded, so there's no need for the full `build`
+      # (release build and lint as well)
       - name: Build app
-        run: ./gradlew build
+        run: ./gradlew assembleDebug
 
       - name: Upload debug apk
         uses: actions/upload-artifact@v4

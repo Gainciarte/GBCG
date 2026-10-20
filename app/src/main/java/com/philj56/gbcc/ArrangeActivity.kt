@@ -37,6 +37,9 @@ class ArrangeActivity : BaseActivity() {
     private lateinit var prefs : SharedPreferences
     private lateinit var binding: ActivityArrangeBinding
 
+    // The system bars are hidden, so only keep clear of the display cutout
+    override val insetTypes = WindowInsetsCompat.Type.displayCutout()
+
     private fun updateLayout(gbc: Boolean) {
         val bgColor = when (gbc) {
             true -> when (prefs.getString("color", "Teal")) {
