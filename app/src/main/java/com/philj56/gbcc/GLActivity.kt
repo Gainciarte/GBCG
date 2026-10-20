@@ -197,6 +197,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
     private external fun isPressed(button: Int) : Boolean
     private external fun toggleTurbo(): Boolean
     private external fun toggleMenu()
+    private external fun setCoreTexts(keys: Array<String>, values: Array<ByteArray>)
     private external fun saveState(state: Int)
     private external fun loadState(state: Int)
     private external fun getOptions(): ByteArray
@@ -386,25 +387,10 @@ class GLActivity : BaseActivity(), SensorEventListener {
     }
 
     private fun updateLayout(gbc: Boolean) {
-        val bgColor = when (gbc) {
-            true -> when (prefs.getString("color", "Teal")) {
-                "Berry" -> R.color.gbcBerry
-                "Dandelion" -> R.color.gbcDandelion
-                "Grape" -> R.color.gbcGrape
-                "Kiwi" -> R.color.gbcKiwi
-                "Teal" -> R.color.gbcTeal
-                else -> R.color.gbcTeal
-            }
-            false -> when (prefs.getString("dmg_color", "Light")) {
-                "Light" -> R.color.dmgLightBackground
-                "Dark" -> R.color.dmgDarkBackground
-                else -> R.color.dmgLightBackground
-            }
-        }
-        // The skin colour goes on the layout, not the window, so the strip kept clear of
+        // The skin goes on the layout, not the window, so the strip kept clear of
         // the display cutout stays black, as it was before apps went edge to edge
         window.setBackgroundDrawableResource(android.R.color.black)
-        binding.root.setBackgroundResource(bgColor)
+        binding.root.background = Skin.background(this, prefs, gbc)
 
         binding.screen.setOnClickListener { toggleMenu() }
         binding.turboToggle.setOnClickListener { toggleTurbo() }
@@ -414,10 +400,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
             val theme = prefs.getString("dmg_color", "Light")
             if (theme == "Dark") {
                 screenBorderColor = ContextCompat.getColor(this, R.color.dmgDarkScreenBorder)
-                binding.dpad.dpadBackground.setColorFilter(
-                    ContextCompat.getColor(this, R.color.dmgDarkDpad),
-                    PorterDuff.Mode.SRC_IN
-                )
+                binding.dpad.dpadBackground.setImageResource(R.drawable.ic_button_dpad_background_dmg_dark)
 
                 binding.buttonA.setImageResource(R.drawable.ic_button_ab_dmg_dark_selector)
                 binding.buttonB.setImageResource(R.drawable.ic_button_ab_dmg_dark_selector)
@@ -512,6 +495,8 @@ class GLActivity : BaseActivity(), SensorEventListener {
         super.onCreate(savedInstanceState)
         onBackPressedDispatcher.addCallback { showBackPrompt() }
         chdir(filesDir.absolutePath)
+        // The core's menu and messages, in the app's language
+        setCoreTexts(CoreTexts.keys, CoreTexts.values(this))
 
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
         requestedOrientation = prefs.getString("orientation", "-1")?.toInt() ?: -1

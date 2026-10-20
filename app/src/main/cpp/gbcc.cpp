@@ -15,6 +15,9 @@
 
 #include <string>
 #include <cmath>
+#include <mutex>
+#include <utility>
+#include <vector>
 #include <android/log.h>
 #include <pthread.h>
 #include <semaphore.h>
@@ -103,6 +106,101 @@ char * get_utf_string(JNIEnv *env, jstring string) {
 	env->ReleaseStringUTFChars(string, cstring);
 
 	return buffer;
+}
+
+/*
+ * Translations of the core's on-screen texts (its menu, in core/menu.c, and its
+ * messages), set by the app from its string resources for the current language.
+ * Values are Latin-1, the encoding of the core's font. A key with "%d" matches a
+ * message that carries a number, such as "Saved state 3".
+ */
+static std::vector<std::pair<std::string, std::string>> translations;
+static std::mutex translations_mutex;
+
+extern "C" const char *gbcc_tr(const char *text) {
+	std::lock_guard<std::mutex> lock(translations_mutex);
+	for (const auto &t : translations) {
+		if (t.first == text) {
+			return t.second.c_str();
+		}
+	}
+	return text;
+}
+
+/* If msg matches a key with "%d", writes the translation with the same number to out */
+static bool translate_numbered(const std::string &key, const std::string &value, const std::string &msg,
+		char *out, size_t size) {
+	size_t pos = key.find("%d");
+	size_t vpos = value.find("%d");
+	if (pos == std::string::npos || vpos == std::string::npos) {
+		return false;
+	}
+	std::string prefix = key.substr(0, pos);
+	std::string suffix = key.substr(pos + 2);
+	if (msg.size() <= prefix.size() + suffix.size()
+			|| msg.compare(0, prefix.size(), prefix) != 0
+			|| msg.compare(msg.size() - suffix.size(), suffix.size(), suffix) != 0) {
+		return false;
+	}
+	std::string number = msg.substr(prefix.size(), msg.size() - prefix.size() - suffix.size());
+	if (number.find_first_not_of("0123456789") != std::string::npos) {
+		return false;
+	}
+	std::string result = value.substr(0, vpos) + number + value.substr(vpos + 2);
+	snprintf(out, size, "%s", result.c_str());
+	return true;
+}
+
+/*
+ * The core shows every message through gbcc_window_show_message(). The linker sends
+ * those calls here instead (-Wl,--wrap in CMakeLists.txt), so the message can be
+ * translated before the real function draws it.
+ */
+extern "C" void __real_gbcc_window_show_message(struct gbcc *gbc, const char *msg, unsigned seconds, bool pad);
+
+extern "C" void __wrap_gbcc_window_show_message(struct gbcc *gbc, const char *msg, unsigned seconds, bool pad) {
+	char buffer[MSG_BUF_SIZE];
+	bool translated = false;
+	{
+		std::lock_guard<std::mutex> lock(translations_mutex);
+		std::string message(msg);
+		for (const auto &t : translations) {
+			if (t.first == message) {
+				snprintf(buffer, sizeof(buffer), "%s", t.second.c_str());
+				translated = true;
+				break;
+			}
+			if (translate_numbered(t.first, t.second, message, buffer, sizeof(buffer))) {
+				translated = true;
+				break;
+			}
+		}
+	}
+	__real_gbcc_window_show_message(gbc, translated ? buffer : msg, seconds, pad);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_philj56_gbcc_GLActivity_setCoreTexts(
+		JNIEnv *env,
+		jobject /* this */,
+		jobjectArray keys,
+		jobjectArray values) {
+	std::vector<std::pair<std::string, std::string>> list;
+	jsize count = env->GetArrayLength(keys);
+	for (jsize i = 0; i < count; i++) {
+		auto key = (jstring)env->GetObjectArrayElement(keys, i);
+		auto value = (jbyteArray)env->GetObjectArrayElement(values, i);
+		char *k = get_utf_string(env, key);
+		jsize length = env->GetArrayLength(value);
+		std::string v((size_t)length, '\0');
+		env->GetByteArrayRegion(value, 0, length, reinterpret_cast<jbyte *>(&v[0]));
+		list.emplace_back(k, v);
+		free(k);
+		env->DeleteLocalRef(key);
+		env->DeleteLocalRef(value);
+	}
+	std::lock_guard<std::mutex> lock(translations_mutex);
+	translations = std::move(list);
 }
 
 void update_preferences(JNIEnv *env, jobject prefs) {

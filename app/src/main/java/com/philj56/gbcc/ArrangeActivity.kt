@@ -41,25 +41,10 @@ class ArrangeActivity : BaseActivity() {
     override val insetTypes = WindowInsetsCompat.Type.displayCutout()
 
     private fun updateLayout(gbc: Boolean) {
-        val bgColor = when (gbc) {
-            true -> when (prefs.getString("color", "Teal")) {
-                "Berry" -> R.color.gbcBerry
-                "Dandelion" -> R.color.gbcDandelion
-                "Grape" -> R.color.gbcGrape
-                "Kiwi" -> R.color.gbcKiwi
-                "Teal" -> R.color.gbcTeal
-                else -> R.color.gbcTeal
-            }
-            false -> when (prefs.getString("dmg_color", "Light")) {
-                "Light" -> R.color.dmgLightBackground
-                "Dark" -> R.color.dmgDarkBackground
-                else -> R.color.dmgLightBackground
-            }
-        }
-        // The skin colour goes on the layout, not the window, so the strip kept clear of
+        // The skin goes on the layout, not the window, so the strip kept clear of
         // the display cutout stays black, as it was before apps went edge to edge
         window.setBackgroundDrawableResource(android.R.color.black)
-        binding.root.setBackgroundResource(bgColor)
+        binding.root.background = Skin.background(this, prefs, gbc)
 
         binding.resetLayout.setOnClickListener { resetLayout() }
         binding.resetSizes.setOnClickListener { resetSizes() }
@@ -73,10 +58,7 @@ class ArrangeActivity : BaseActivity() {
             val theme = prefs.getString("dmg_color", "Light")
             if (theme == "Dark") {
                 screenBorderColor = ContextCompat.getColor(this, R.color.dmgDarkScreenBorder)
-                binding.dpad.dpadBackground.setColorFilter(
-                    ContextCompat.getColor(this, R.color.dmgDarkDpad),
-                    android.graphics.PorterDuff.Mode.SRC_IN
-                )
+                binding.dpad.dpadBackground.setImageResource(R.drawable.ic_button_dpad_background_dmg_dark)
 
                 binding.buttonA.setImageResource(R.drawable.ic_button_ab_dmg_dark_selector)
                 binding.buttonB.setImageResource(R.drawable.ic_button_ab_dmg_dark_selector)

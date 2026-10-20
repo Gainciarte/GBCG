@@ -79,6 +79,8 @@ abstract class BaseActivity : AppCompatActivity() {
             "Grape" -> R.style.Theme_GBCC_Grape
             "Kiwi" -> R.style.Theme_GBCC_Kiwi
             "Teal" -> R.style.Theme_GBCC_Teal
+            // The translucent skins: the purple one takes the purple theme, the clear one the default
+            "AtomicPurple" -> R.style.Theme_GBCC_Grape
             else -> R.style.Theme_GBCC_Teal
         }
     }

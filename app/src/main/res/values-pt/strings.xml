@@ -147,6 +147,8 @@
     <string name="settings_color_grape">Roxo</string>
     <string name="settings_color_kiwi">Verde</string>
     <string name="settings_color_teal">Verde-azulado</string>
+    <string name="settings_color_atomic_purple">Roxo translúcido</string>
+    <string name="settings_color_clear">Transparente</string>
 
     <string name="settings_audio_volume">Volume</string>
     <string name="settings_audio_printer_volume">Volume da impressora</string>
@@ -277,4 +279,44 @@
     <string name="palette_green">Verde</string>
     <string name="palette_dark_green">Verde-escuro</string>
     <string name="palette_invert">Invertida</string>
+
+    <!-- Texts the emulator core draws on the game screen (see CoreTexts.kt). -->
+    <string name="core_menu_save_state">Salvar:</string>
+    <string name="core_menu_load_state">Carregar:</string>
+    <string name="core_menu_autosave">Autosalvar:</string>
+    <string name="core_menu_frameblend">Mesclagem:</string>
+    <string name="core_menu_link_cable">Cabo link:</string>
+    <string name="core_menu_shader">Shader:</string>
+    <string name="core_menu_turbo">Mult. turbo:</string>
+    <string name="core_menu_vsync">Vsync:</string>
+    <string name="core_menu_interlacing">Entrelaçam.:</string>
+    <string name="core_menu_fps">Mostrar FPS:</string>
+    <string name="core_menu_cheats">Trapaças:</string>
+    <string name="core_menu_palette">Paleta:</string>
+    <string name="core_on">Sim</string>
+    <string name="core_off">Não</string>
+    <string name="core_disconnected">Desconectado</string>
+    <string name="core_loopback">Loopback</string>
+    <string name="core_printer">Impressora</string>
+    <string name="core_unlimited">Sem limite</string>
+    <string name="core_shader_colour_correct">Correção de cor</string>
+    <string name="core_msg_printer_connected">Impressora conectada</string>
+    <string name="core_msg_printer_disconnected">Impressora desconectada</string>
+    <string name="core_msg_frameblend_on">Mesclagem de quadros ativada</string>
+    <string name="core_msg_frameblend_off">Mesclagem de quadros desativada</string>
+    <string name="core_msg_vsync_on">Vsync ativado</string>
+    <string name="core_msg_vsync_off">Vsync desativado</string>
+    <string name="core_msg_link_on">Cabo link conectado</string>
+    <string name="core_msg_link_off">Cabo link desconectado</string>
+    <string name="core_msg_autosave_on">Salvamento automático ativado</string>
+    <string name="core_msg_autosave_off">Salvamento automático desativado</string>
+    <string name="core_msg_background_play_on">Jogo em segundo plano ativado</string>
+    <string name="core_msg_background_play_off">Jogo em segundo plano desativado</string>
+    <string name="core_msg_interlacing_on">Entrelaçamento ativado</string>
+    <string name="core_msg_interlacing_off">Entrelaçamento desativado</string>
+    <string name="core_msg_cheats_on">Trapaças ativadas</string>
+    <string name="core_msg_cheats_off">Trapaças desativadas</string>
+    <string name="core_msg_state_saved" formatted="false">Estado %d salvo</string>
+    <string name="core_msg_state_not_found" formatted="false">Estado %d não encontrado</string>
+    <string name="core_msg_state_loaded" formatted="false">Estado %d carregado</string>
 </resources>

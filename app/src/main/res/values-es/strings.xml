@@ -145,6 +145,8 @@
     <string name="settings_color_grape">Morado</string>
     <string name="settings_color_kiwi">Verde</string>
     <string name="settings_color_teal">Verde azulado</string>
+    <string name="settings_color_atomic_purple">Morado translúcido</string>
+    <string name="settings_color_clear">Transparente</string>
 
     <string name="settings_audio_volume">Volumen</string>
     <string name="settings_audio_printer_volume">Volumen de la impresora</string>
@@ -275,4 +277,44 @@
     <string name="palette_green">Verde</string>
     <string name="palette_dark_green">Verde oscuro</string>
     <string name="palette_invert">Invertida</string>
+
+    <!-- Texts the emulator core draws on the game screen (see CoreTexts.kt). -->
+    <string name="core_menu_save_state">Guardar:</string>
+    <string name="core_menu_load_state">Cargar:</string>
+    <string name="core_menu_autosave">Autoguardar:</string>
+    <string name="core_menu_frameblend">Mezcla fot.:</string>
+    <string name="core_menu_link_cable">Cable link:</string>
+    <string name="core_menu_shader">Shader:</string>
+    <string name="core_menu_turbo">Vel. turbo:</string>
+    <string name="core_menu_vsync">Vsync:</string>
+    <string name="core_menu_interlacing">Entrelazado:</string>
+    <string name="core_menu_fps">Mostrar FPS:</string>
+    <string name="core_menu_cheats">Trucos:</string>
+    <string name="core_menu_palette">Paleta:</string>
+    <string name="core_on">Sí</string>
+    <string name="core_off">No</string>
+    <string name="core_disconnected">Desconectado</string>
+    <string name="core_loopback">Bucle</string>
+    <string name="core_printer">Impresora</string>
+    <string name="core_unlimited">Sin límite</string>
+    <string name="core_shader_colour_correct">Corrección color</string>
+    <string name="core_msg_printer_connected">Impresora conectada</string>
+    <string name="core_msg_printer_disconnected">Impresora desconectada</string>
+    <string name="core_msg_frameblend_on">Mezcla de fotogramas activada</string>
+    <string name="core_msg_frameblend_off">Mezcla de fotogramas desactivada</string>
+    <string name="core_msg_vsync_on">Vsync activado</string>
+    <string name="core_msg_vsync_off">Vsync desactivado</string>
+    <string name="core_msg_link_on">Cable link conectado</string>
+    <string name="core_msg_link_off">Cable link desconectado</string>
+    <string name="core_msg_autosave_on">Guardado automático activado</string>
+    <string name="core_msg_autosave_off">Guardado automático desactivado</string>
+    <string name="core_msg_background_play_on">Juego en segundo plano activado</string>
+    <string name="core_msg_background_play_off">Juego en segundo plano desactivado</string>
+    <string name="core_msg_interlacing_on">Entrelazado activado</string>
+    <string name="core_msg_interlacing_off">Entrelazado desactivado</string>
+    <string name="core_msg_cheats_on">Trucos activados</string>
+    <string name="core_msg_cheats_off">Trucos desactivados</string>
+    <string name="core_msg_state_saved" formatted="false">Estado %d guardado</string>
+    <string name="core_msg_state_not_found" formatted="false">No hay estado %d</string>
+    <string name="core_msg_state_loaded" formatted="false">Estado %d cargado</string>
 </resources>

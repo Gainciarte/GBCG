@@ -153,6 +153,8 @@
     <string name="settings_color_grape">Purple</string>
     <string name="settings_color_kiwi">Green</string>
     <string name="settings_color_teal">Blue-green</string>
+    <string name="settings_color_atomic_purple">Translucent purple</string>
+    <string name="settings_color_clear">Clear</string>
 
     <string name="settings_audio_volume">Volume</string>
     <string name="settings_audio_printer_volume">Printer volume</string>
@@ -284,4 +286,45 @@
     <string name="palette_green">Green</string>
     <string name="palette_dark_green">Dark green</string>
     <string name="palette_invert">Inverted</string>
+
+    <!-- Texts the emulator core draws on the game screen (see CoreTexts.kt).
+         Menu labels: 12 characters at most, colon included. Only Latin-1 characters. -->
+    <string name="core_menu_save_state">Save state:</string>
+    <string name="core_menu_load_state">Load state:</string>
+    <string name="core_menu_autosave">Autosave:</string>
+    <string name="core_menu_frameblend">Frameblend:</string>
+    <string name="core_menu_link_cable">Link cable:</string>
+    <string name="core_menu_shader">Shader:</string>
+    <string name="core_menu_turbo">Turbo mult:</string>
+    <string name="core_menu_vsync">Vsync:</string>
+    <string name="core_menu_interlacing">Interlacing:</string>
+    <string name="core_menu_fps">FPS counter:</string>
+    <string name="core_menu_cheats">Cheats:</string>
+    <string name="core_menu_palette">Palette:</string>
+    <string name="core_on">On</string>
+    <string name="core_off">Off</string>
+    <string name="core_disconnected">Disconnected</string>
+    <string name="core_loopback">Loopback</string>
+    <string name="core_printer">Printer</string>
+    <string name="core_unlimited">Unlimited</string>
+    <string name="core_shader_colour_correct">Colour correct</string>
+    <string name="core_msg_printer_connected">Printer connected</string>
+    <string name="core_msg_printer_disconnected">Printer disconnected</string>
+    <string name="core_msg_frameblend_on">Frame blending enabled</string>
+    <string name="core_msg_frameblend_off">Frame blending disabled</string>
+    <string name="core_msg_vsync_on">Vsync enabled</string>
+    <string name="core_msg_vsync_off">Vsync disabled</string>
+    <string name="core_msg_link_on">Link cable connected</string>
+    <string name="core_msg_link_off">Link cable disconnected</string>
+    <string name="core_msg_autosave_on">Autosave enabled</string>
+    <string name="core_msg_autosave_off">Autosave disabled</string>
+    <string name="core_msg_background_play_on">Background playback enabled</string>
+    <string name="core_msg_background_play_off">Background playback disabled</string>
+    <string name="core_msg_interlacing_on">Interlacing enabled</string>
+    <string name="core_msg_interlacing_off">Interlacing disabled</string>
+    <string name="core_msg_cheats_on">Cheats enabled</string>
+    <string name="core_msg_cheats_off">Cheats disabled</string>
+    <string name="core_msg_state_saved" formatted="false">Saved state %d</string>
+    <string name="core_msg_state_not_found" formatted="false">State %d not found</string>
+    <string name="core_msg_state_loaded" formatted="false">Loaded state %d</string>
 </resources>

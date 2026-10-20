@@ -40,7 +40,18 @@ El fork recién empieza. Por ahora, lo distinto del original es:
   incluye la ROM tutorial de GBCC.
 - **Idiomas:** inglés, español, francés, alemán, italiano y portugués de Brasil,
   con un selector en Settings > Language (o en el idioma por app de Android 13 y
-  superior). Los mensajes que dibuja el núcleo dentro del juego siguen en inglés.
+  superior). También se traducen el menú y los mensajes que el núcleo dibuja sobre
+  la pantalla del juego: GBCG compila su propia copia del menú
+  ([`cpp/core/menu.c`](app/src/main/cpp/core/menu.c)) y le pasa los textos en el
+  idioma de la app; los mensajes pasan por `gbcc.cpp` antes de dibujarse (opción
+  `--wrap` del enlazador). La fuente del núcleo solo tiene caracteres Latin-1, así
+  que esos textos no pueden llevar otros.
+- **Carcasas con textura:** la carcasa tiene un grano de plástico mate y los botones
+  tienen relieve, brillo y sombra (imágenes generadas con
+  [`sources/make_skin.py`](sources/make_skin.py)). La carcasa GBC viene en siete
+  colores: rojo, amarillo, morado, verde, verde azulado y dos translúcidas, morado
+  translúcido y transparente, en las que se ve una placa de circuito por dentro. La
+  DMG, en claro y oscuro.
 - **Ajustes reorganizados:** Controls, Picture, Sound, Advanced y About (versión,
   código fuente y licencias), en vez de las cinco categorías originales. Un solo
   ajuste de color pinta la carcasa y la app.

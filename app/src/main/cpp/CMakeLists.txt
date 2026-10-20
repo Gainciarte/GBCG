@@ -44,7 +44,8 @@ add_library(gbcc SHARED
 	${GBCC_DIR}/src/input.c
 	${GBCC_DIR}/src/mbc.c
 	${GBCC_DIR}/src/memory.c
-	${GBCC_DIR}/src/menu.c
+	# GBCG's copy, with the menu's texts translated (see core/menu.c)
+	core/menu.c
 	${GBCC_DIR}/src/ops.c
 	${GBCC_DIR}/src/palettes.c
 	${GBCC_DIR}/src/ppu.c
@@ -55,6 +56,9 @@ add_library(gbcc SHARED
 	${GBCC_DIR}/src/window.c
 	${GBCC_DIR}/src/vram_window.c
 	${GBCC_DIR}/src/wav.c)
+
+# Messages go through gbcc.cpp first, to be translated
+target_link_options(gbcc PRIVATE "-Wl,--wrap=gbcc_window_show_message")
 
 target_link_libraries(gbcc
 	log
