@@ -56,7 +56,10 @@ class ArrangeActivity : BaseActivity() {
                 else -> R.color.dmgLightBackground
             }
         }
-        window.setBackgroundDrawableResource(bgColor)
+        // The skin colour goes on the layout, not the window, so the strip kept clear of
+        // the display cutout stays black, as it was before apps went edge to edge
+        window.setBackgroundDrawableResource(android.R.color.black)
+        binding.root.setBackgroundResource(bgColor)
 
         binding.resetLayout.setOnClickListener { resetLayout() }
         binding.resetSizes.setOnClickListener { resetSizes() }
