@@ -30,16 +30,18 @@ class EditTextDialogFragment : DialogFragment() {
         private const val ARG_INITIAL_TEXT = "initialText"
         private const val ARG_REQUEST_KEY = "requestKey"
         private const val ARG_PATH = "path"
+        private const val ARG_HINT = "hint"
 
         fun dismissKey(requestKey: String) = "$requestKey.dismiss"
 
-        fun newInstance(title: Int, initialText: String, requestKey: String, path: String? = null) =
+        fun newInstance(title: Int, initialText: String, requestKey: String, path: String? = null, hint: Int = 0) =
             EditTextDialogFragment().apply {
                 arguments = bundleOf(
                     ARG_TITLE to title,
                     ARG_INITIAL_TEXT to initialText,
                     ARG_REQUEST_KEY to requestKey,
-                    ARG_PATH to path
+                    ARG_PATH to path,
+                    ARG_HINT to hint
                 )
             }
     }
@@ -57,6 +59,7 @@ class EditTextDialogFragment : DialogFragment() {
         return activity?.let {
             val textView = it.layoutInflater.inflate(R.layout.dialog_create_folder, null, false)
             val input = textView?.findViewById<EditText>(R.id.createFolderInput)
+            requireArguments().getInt(ARG_HINT).takeIf { hint -> hint != 0 }?.let { hint -> input?.setHint(hint) }
             input?.setText(initialText)
 
             val builder = MaterialAlertDialogBuilder(it)

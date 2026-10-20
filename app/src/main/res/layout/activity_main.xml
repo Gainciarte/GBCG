@@ -29,14 +29,23 @@
         android:orientation="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/path"
+        <!-- Groups: all games, GBC and GB (by extension), and the user's own -->
+        <HorizontalScrollView
+            android:id="@+id/groupScroll"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:scrollbars="none"
-            android:paddingHorizontal="8dp"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+            android:clipToPadding="false"
+            android:paddingHorizontal="16dp"
+            android:scrollbars="none">
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/groupChips"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:selectionRequired="true"
+                app:singleLine="true"
+                app:singleSelection="true" />
+        </HorizontalScrollView>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/fileList"

@@ -33,6 +33,7 @@ import androidx.core.graphics.drawable.IconCompat
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.Lifecycle
 import androidx.preference.PreferenceManager
+import com.google.android.material.chip.Chip
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.philj56.gbcc.databinding.ActivityMainBinding
 import com.philj56.gbcc.databinding.DialogRomActionsBinding
@@ -53,8 +54,8 @@ private const val BACK_DELAY: Int = 2000
 private const val SAVE_DIR: String = "saves"
 const val IMPORTED_SAVE_SUBDIR: String = "imported"
 private const val REQUEST_RENAME = "rename"
-private const val STATE_PATH_NAMES = "pathNames"
-private const val STATE_PATH_IDS = "pathIds"
+private const val REQUEST_NEW_GROUP = "newGroup"
+private const val REQUEST_RENAME_GROUP = "renameGroup"
 
 // Only saves are imported: the games stay in the ROM folder
 private val IMPORTABLE_REGEX = Regex(".*\\.(sav|s[0-9])", RegexOption.IGNORE_CASE)
@@ -65,23 +66,22 @@ class MainActivity : BaseActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var watcher: RomFolderWatcher
     private var treeUri: Uri? = null
-    // From the ROM folder down to the folder being shown
-    private val pathStack = ArrayList<PathEntry>()
+    // Every ROM in the folder and its subfolders, as of the last scan (null: the folder can't be read)
+    private var allRoms: List<RomEntry>? = emptyList()
+    private var groups = mutableListOf<RomGroup>()
+    private lateinit var selectedGroup: String
 
     private var timeBackPressed: Long = 0
 
     private val fileAdapter = FileAdapter(
-        onClick = { entry -> onEntryClick(entry) },
+        onClick = { entry -> launchGame(entry) },
         onShowActions = { entry -> showRomActionsDialog(entry) }
-    )
-    private val pathAdapter = PathAdapter(
-        onClick = { entry -> onPathItemClick(entry) }
     )
 
     private val chooseFolder = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) {
             RomFolder.choose(this, uri)
-            openRomFolder(null)
+            openRomFolder()
         }
     }
 
@@ -110,16 +110,44 @@ class MainActivity : BaseActivity() {
 
         binding.fileList.adapter = fileAdapter
         binding.fileList.itemAnimator = null
-        binding.path.adapter = pathAdapter
-        binding.path.itemAnimator = null
 
-        watcher = RomFolderWatcher(this) { entries -> showEntries(entries) }
+        groups = RomGroups.load(this)
+        selectedGroup = RomGroups.selected(this)
+        binding.groupChips.setOnCheckedStateChangeListener { group, checkedIds ->
+            val key = checkedIds.firstOrNull()?.let { group.findViewById<View>(it)?.tag as? String }
+            if (key != null && key != selectedGroup) {
+                selectedGroup = key
+                RomGroups.select(this, key)
+                showRoms()
+            }
+        }
+
+        watcher = RomFolderWatcher(this) { roms ->
+            allRoms = roms
+            updateGroupChips()
+            showRoms()
+        }
 
         supportFragmentManager.setFragmentResultListener(REQUEST_RENAME, this) { _, result ->
             val documentId = result.getString(EditTextDialogFragment.RESULT_PATH)
             val name = result.getString(EditTextDialogFragment.RESULT_TEXT)
             if (documentId != null && name != null) {
-                renameRom(documentId, name)
+                renameRom(documentId, name.trim())
+            }
+        }
+        supportFragmentManager.setFragmentResultListener(REQUEST_NEW_GROUP, this) { _, result ->
+            val name = result.getString(EditTextDialogFragment.RESULT_TEXT)?.trim()
+            // When created from a game's menu, the game goes in the new group
+            val romName = result.getString(EditTextDialogFragment.RESULT_PATH)
+            if (!name.isNullOrEmpty()) {
+                createGroup(name, romName)
+            }
+        }
+        supportFragmentManager.setFragmentResultListener(REQUEST_RENAME_GROUP, this) { _, result ->
+            val oldName = result.getString(EditTextDialogFragment.RESULT_PATH)
+            val newName = result.getString(EditTextDialogFragment.RESULT_TEXT)?.trim()
+            if (oldName != null && !newName.isNullOrEmpty()) {
+                renameGroup(oldName, newName)
             }
         }
 
@@ -127,7 +155,7 @@ class MainActivity : BaseActivity() {
             // No game is open, so any ROM left in the cache is stale
             GLActivity.clearRomCache(this)
         }
-        openRomFolder(savedInstanceState)
+        openRomFolder()
 
         // Check if the version has changed since last launch, and perform some setup if so
         Thread {
@@ -153,7 +181,7 @@ class MainActivity : BaseActivity() {
         super.onStart()
         // Picks up any change made to the folder while the app was in the background,
         // and keeps watching it while it's visible
-        watchCurrentFolder()
+        treeUri?.let { watcher.watch(it) }
     }
 
     override fun onStop() {
@@ -175,55 +203,86 @@ class MainActivity : BaseActivity() {
         delegate.applyDayNight()
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putStringArrayList(STATE_PATH_NAMES, ArrayList(pathStack.map { it.name }))
-        outState.putStringArrayList(STATE_PATH_IDS, ArrayList(pathStack.map { it.documentId }))
-    }
-
-    /** Shows the chosen ROM folder, at the subfolder saved in state if there is one. */
-    private fun openRomFolder(state: Bundle?) {
+    private fun openRomFolder() {
         val tree = RomFolder.treeUri(this)
         treeUri = tree
-        pathStack.clear()
         if (tree == null) {
-            fileAdapter.submitList(emptyList())
-            showEmptyState(R.string.rom_folder_prompt, true)
-            updatePath()
+            allRoms = if (RomFolder.wasChosen(this)) null else emptyList()
+            updateGroupChips()
+            showRoms()
             return
         }
-        val names = state?.getStringArrayList(STATE_PATH_NAMES)
-        val ids = state?.getStringArrayList(STATE_PATH_IDS)
-        if (names != null && ids != null && names.isNotEmpty() && names.size == ids.size) {
-            names.zip(ids).forEach { (name, id) -> pathStack.add(PathEntry(name, id)) }
-        } else {
-            pathStack.add(RomFolder.root(this, tree))
-        }
-        updatePath()
         if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
-            watchCurrentFolder()
+            watcher.watch(tree)
         }
     }
 
-    private fun watchCurrentFolder() {
-        val tree = treeUri ?: return
-        val current = pathStack.lastOrNull() ?: return
-        watcher.watch(tree, current.documentId)
-    }
-
-    private fun showEntries(entries: List<RomEntry>?) {
-        if (entries == null) {
-            // The folder can't be read any more (deleted, or the permission was revoked)
-            fileAdapter.submitList(emptyList())
-            showEmptyState(R.string.rom_folder_lost, true)
+    /** Rebuilds the row of groups: all games, GBC and GB if there are any, and the user's own. */
+    private fun updateGroupChips() {
+        val roms = allRoms
+        binding.groupScroll.visibility = if (treeUri == null || roms.isNullOrEmpty()) View.GONE else View.VISIBLE
+        if (roms == null) {
             return
         }
-        fileAdapter.submitList(entries)
-        if (entries.isEmpty()) {
-            showEmptyState(R.string.rom_folder_empty, pathStack.size <= 1)
-        } else {
-            binding.emptyState.visibility = View.GONE
-            binding.fileList.visibility = View.VISIBLE
+        val chips = ArrayList<Pair<String, String>>()
+        chips.add(RomGroups.ALL to getString(R.string.group_all))
+        if (roms.any { it.isGbc }) chips.add(RomGroups.GBC to getString(R.string.group_gbc))
+        if (roms.any { !it.isGbc }) chips.add(RomGroups.GB to getString(R.string.group_gb))
+        groups.forEach { chips.add(RomGroups.customKey(it.name) to it.name) }
+        if (chips.none { it.first == selectedGroup }) {
+            // The group was deleted, or its games are gone
+            selectedGroup = RomGroups.ALL
+            RomGroups.select(this, selectedGroup)
+        }
+
+        binding.groupChips.removeAllViews()
+        chips.forEach { (key, label) ->
+            val chip = layoutInflater.inflate(R.layout.chip_group, binding.groupChips, false) as Chip
+            chip.id = View.generateViewId()
+            chip.tag = key
+            chip.text = label
+            RomGroups.customName(key)?.let { name ->
+                chip.setOnLongClickListener {
+                    showGroupActionsDialog(name)
+                    true
+                }
+            }
+            binding.groupChips.addView(chip)
+            if (key == selectedGroup) {
+                binding.groupChips.check(chip.id)
+            }
+        }
+        val addChip = layoutInflater.inflate(R.layout.chip_group_add, binding.groupChips, false) as Chip
+        addChip.setOnClickListener { showNewGroupDialog(null) }
+        binding.groupChips.addView(addChip)
+    }
+
+    private fun showRoms() {
+        val roms = allRoms
+        when {
+            treeUri == null && roms != null -> {
+                fileAdapter.submitList(emptyList())
+                showEmptyState(R.string.rom_folder_prompt, true)
+            }
+            roms == null -> {
+                // The folder can't be read any more (deleted, or the permission was revoked)
+                fileAdapter.submitList(emptyList())
+                showEmptyState(R.string.rom_folder_lost, true)
+            }
+            roms.isEmpty() -> {
+                fileAdapter.submitList(emptyList())
+                showEmptyState(R.string.rom_folder_empty, true)
+            }
+            else -> {
+                val shown = RomGroups.filter(selectedGroup, roms, groups) ?: roms
+                fileAdapter.submitList(shown)
+                if (shown.isEmpty()) {
+                    showEmptyState(R.string.group_empty, false)
+                } else {
+                    binding.emptyState.visibility = View.GONE
+                    binding.fileList.visibility = View.VISIBLE
+                }
+            }
         }
     }
 
@@ -234,36 +293,9 @@ class MainActivity : BaseActivity() {
         binding.fileList.visibility = View.GONE
     }
 
-    private fun updatePath() {
-        binding.path.visibility = if (pathStack.isEmpty()) View.GONE else View.VISIBLE
-        pathAdapter.submitList(ArrayList(pathStack)) {
-            // Rebind every entry, so only the last one shows as the current folder
-            pathAdapter.notifyItemRangeChanged(0, pathAdapter.itemCount)
-            binding.path.scrollToPosition(pathAdapter.itemCount - 1)
-        }
-    }
-
-    private fun onEntryClick(entry: RomEntry) {
-        if (entry.isDirectory) {
-            pathStack.add(PathEntry(entry.name, entry.documentId))
-            updatePath()
-            watchCurrentFolder()
-        } else {
-            val tree = treeUri ?: return
-            startActivity(GLActivity.intent(this, RomFolder.documentUri(tree, entry.documentId), entry.name))
-        }
-    }
-
-    private fun onPathItemClick(entry: PathEntry) {
-        val index = pathStack.indexOfFirst { it.documentId == entry.documentId }
-        if (index < 0 || index == pathStack.size - 1) {
-            return
-        }
-        while (pathStack.size > index + 1) {
-            pathStack.removeAt(pathStack.size - 1)
-        }
-        updatePath()
-        watchCurrentFolder()
+    private fun launchGame(entry: RomEntry) {
+        val tree = treeUri ?: return
+        startActivity(GLActivity.intent(this, RomFolder.documentUri(tree, entry.documentId), entry.name))
     }
 
     private fun onMenuItemClick(item: MenuItem): Boolean {
@@ -290,18 +322,117 @@ class MainActivity : BaseActivity() {
         }
     }
 
+    private fun showNewGroupDialog(romName: String?) {
+        EditTextDialogFragment.newInstance(
+            R.string.new_group, "", REQUEST_NEW_GROUP, romName, R.string.group_name_hint
+        ).show(supportFragmentManager, "")
+    }
+
+    private fun createGroup(name: String, romName: String?) {
+        if (groups.any { it.name == name }) {
+            Toast.makeText(baseContext, getString(R.string.group_exists, name), Toast.LENGTH_SHORT).show()
+            return
+        }
+        val group = RomGroup(name)
+        romName?.let { group.roms.add(it) }
+        groups.add(group)
+        RomGroups.save(this, groups)
+        if (romName == null) {
+            // A group made from the row of groups is shown right away
+            selectedGroup = RomGroups.customKey(name)
+            RomGroups.select(this, selectedGroup)
+        }
+        updateGroupChips()
+        showRoms()
+    }
+
+    private fun showGroupActionsDialog(name: String) {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(name)
+            .setItems(arrayOf(getString(R.string.rename_group), getString(R.string.delete_group))) { _, which ->
+                when (which) {
+                    0 -> EditTextDialogFragment.newInstance(
+                        R.string.rename_group, name, REQUEST_RENAME_GROUP, name, R.string.group_name_hint
+                    ).show(supportFragmentManager, "")
+                    1 -> MaterialAlertDialogBuilder(this)
+                        .setMessage(getString(R.string.delete_group_confirmation, name))
+                        .setPositiveButton(R.string.delete) { _, _ -> deleteGroup(name) }
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show()
+                }
+            }
+            .show()
+    }
+
+    private fun renameGroup(oldName: String, newName: String) {
+        if (oldName == newName) {
+            return
+        }
+        if (groups.any { it.name == newName }) {
+            Toast.makeText(baseContext, getString(R.string.group_exists, newName), Toast.LENGTH_SHORT).show()
+            return
+        }
+        val index = groups.indexOfFirst { it.name == oldName }
+        if (index < 0) {
+            return
+        }
+        groups[index] = groups[index].copy(name = newName)
+        RomGroups.save(this, groups)
+        if (selectedGroup == RomGroups.customKey(oldName)) {
+            selectedGroup = RomGroups.customKey(newName)
+            RomGroups.select(this, selectedGroup)
+        }
+        updateGroupChips()
+        showRoms()
+    }
+
+    private fun deleteGroup(name: String) {
+        groups.removeAll { it.name == name }
+        RomGroups.save(this, groups)
+        updateGroupChips()
+        showRoms()
+    }
+
+    /** Lets the user tick the groups a game belongs to. */
+    private fun showRomGroupsDialog(entry: RomEntry) {
+        if (groups.isEmpty()) {
+            showNewGroupDialog(entry.name)
+            return
+        }
+        val names = groups.map { it.name }.toTypedArray()
+        val checked = groups.map { entry.name in it.roms }.toBooleanArray()
+        MaterialAlertDialogBuilder(this)
+            .setTitle(entry.baseName)
+            .setMultiChoiceItems(names, checked) { _, which, isChecked -> checked[which] = isChecked }
+            .setPositiveButton(android.R.string.ok) { _, _ ->
+                groups.forEachIndexed { i, group ->
+                    if (checked[i]) group.roms.add(entry.name) else group.roms.remove(entry.name)
+                }
+                RomGroups.save(this, groups)
+                showRoms()
+            }
+            .setNegativeButton(android.R.string.cancel, null)
+            .setNeutralButton(R.string.new_group) { _, _ -> showNewGroupDialog(entry.name) }
+            .show()
+    }
+
     private fun showRomActionsDialog(entry: RomEntry) {
         val binding = DialogRomActionsBinding.inflate(layoutInflater)
         val dialog = MaterialAlertDialogBuilder(this)
             .setView(binding.root)
             .show()
 
+        binding.buttonGroups.setOnClickListener {
+            showRomGroupsDialog(entry)
+            dialog.dismiss()
+        }
         binding.buttonRenameRom.setOnClickListener {
             EditTextDialogFragment.newInstance(
                 R.string.rename_rom,
                 entry.baseName,
                 REQUEST_RENAME,
-                entry.documentId
+                entry.documentId,
+                R.string.rom_name_hint
             ).show(supportFragmentManager, "")
             dialog.dismiss()
         }
@@ -410,6 +541,12 @@ class MainActivity : BaseActivity() {
                 state.renameTo(filesDir.resolve("saves/$newBaseName.s$n"))
             }
         }
+        groups.forEach { group ->
+            if (group.roms.remove(entry.name)) {
+                group.roms.add(newName)
+            }
+        }
+        RomGroups.save(this, groups)
         watcher.reload()
     }
 
@@ -686,13 +823,6 @@ class MainActivity : BaseActivity() {
     }
 
     private fun backPress() {
-        if (pathStack.size > 1) {
-            pathStack.removeAt(pathStack.size - 1)
-            updatePath()
-            watchCurrentFolder()
-            return
-        }
-
         if (timeBackPressed + BACK_DELAY > System.currentTimeMillis()) {
             finish()
             return

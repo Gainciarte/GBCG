@@ -16,6 +16,9 @@ import java.io.File
 
 private const val PREF_ROM_FOLDER = "rom_folder_uri"
 private const val REFRESH_DELAY_MS = 300L
+// Limits for scanning subfolders, so a huge folder (e.g. the whole storage) can't stall the app
+private const val MAX_DEPTH = 4
+private const val MAX_FOLDERS = 64
 
 // Extensions are matched ignoring case, so that e.g. "Tetris.GB" is listed too
 val ROM_REGEX = Regex(".*\\.gbc?", RegexOption.IGNORE_CASE)
@@ -25,16 +28,18 @@ data class RomEntry(val name: String, val documentId: String, val isDirectory: B
     /** The name without extension, which is also the name of the game's saves and config. */
     val baseName get() = if (isDirectory) name else File(name).nameWithoutExtension
     val extension get() = if (isDirectory) "" else File(name).extension
+    val isGbc get() = extension.equals("gbc", ignoreCase = true)
 }
-
-/** A step in the path from the ROM folder to the folder being shown. */
-data class PathEntry(val name: String, val documentId: String)
 
 /*
  * The folder the user keeps their ROMs in, chosen once with the system folder picker
  * (Storage Access Framework). The ROMs are read from there and never copied into the app.
  */
 object RomFolder {
+    /** True if a folder was chosen at some point, even if its permission has been lost. */
+    fun wasChosen(context: Context) =
+        PreferenceManager.getDefaultSharedPreferences(context).contains(PREF_ROM_FOLDER)
+
     /** The chosen folder, or null if none has been chosen or its permission was lost. */
     fun treeUri(context: Context): Uri? {
         val uri = PreferenceManager.getDefaultSharedPreferences(context)
@@ -71,20 +76,6 @@ object RomFolder {
         }
     }
 
-    fun root(context: Context, tree: Uri): PathEntry {
-        val documentId = DocumentsContract.getTreeDocumentId(tree)
-        val name = try {
-            context.contentResolver.query(
-                DocumentsContract.buildDocumentUriUsingTree(tree, documentId),
-                arrayOf(Document.COLUMN_DISPLAY_NAME), null, null, null
-            )?.use { if (it.moveToFirst()) it.getString(0) else null }
-        } catch (e: Exception) {
-            // The folder was deleted: listing it will fail too, and ask for a new one
-            null
-        }
-        return PathEntry(name ?: documentId.substringAfterLast(':'), documentId)
-    }
-
     fun documentUri(tree: Uri, documentId: String): Uri =
         DocumentsContract.buildDocumentUriUsingTree(tree, documentId)
 
@@ -99,7 +90,7 @@ object RomFolder {
         null
     }
 
-    /** The subfolders and ROMs in a cursor from queryChildren, folders first. */
+    /** The subfolders and ROMs in a cursor from queryChildren. */
     fun entries(cursor: Cursor): List<RomEntry> {
         val list = ArrayList<RomEntry>()
         cursor.moveToPosition(-1)
@@ -110,20 +101,20 @@ object RomFolder {
                 list.add(RomEntry(name, cursor.getString(1), isDirectory))
             }
         }
-        return list.sortedWith(compareBy({ !it.isDirectory }, { it.name.lowercase() }))
+        return list
     }
 }
 
 /*
- * Keeps a folder's listing open and calls onChange (debounced) whenever files are added,
- * removed or renamed in it. The documents provider only watches a folder while a cursor
- * on it is open, so the cursor stays open until stop().
+ * Scans the ROM folder and its subfolders, and calls onChange (debounced) with every ROM
+ * found whenever files are added, removed or renamed in any of them; null means the folder
+ * can't be read. The documents provider only watches a folder while a cursor on it is open,
+ * so the cursors stay open until stop().
  */
 class RomFolderWatcher(private val context: Context, private val onChange: (List<RomEntry>?) -> Unit) {
     private val handler = Handler(Looper.getMainLooper())
-    private var cursor: Cursor? = null
+    private var cursors = emptyList<Cursor>()
     private var tree: Uri? = null
-    private var documentId: String? = null
     private val refresh = Runnable { reload() }
     private val observer = object : ContentObserver(handler) {
         override fun onChange(selfChange: Boolean) {
@@ -132,32 +123,45 @@ class RomFolderWatcher(private val context: Context, private val onChange: (List
         }
     }
 
-    fun watch(tree: Uri, documentId: String) {
+    fun watch(tree: Uri) {
         this.tree = tree
-        this.documentId = documentId
         reload()
     }
 
     fun reload() {
         val tree = tree ?: return
-        val documentId = documentId ?: return
-        val newCursor = RomFolder.queryChildren(context, tree, documentId)
-        closeCursor()
-        cursor = newCursor
-        newCursor?.registerContentObserver(observer)
-        onChange(newCursor?.let { RomFolder.entries(it) })
+        val newCursors = ArrayList<Cursor>()
+        val roms = ArrayList<RomEntry>()
+        val readable = scan(tree, DocumentsContract.getTreeDocumentId(tree), 0, newCursors, roms)
+        closeCursors()
+        cursors = newCursors
+        newCursors.forEach { it.registerContentObserver(observer) }
+        onChange(if (readable) roms.sortedBy { it.name.lowercase() } else null)
     }
 
     fun stop() {
         handler.removeCallbacks(refresh)
-        closeCursor()
+        closeCursors()
     }
 
-    private fun closeCursor() {
-        cursor?.let {
+    private fun scan(tree: Uri, documentId: String, depth: Int, cursors: MutableList<Cursor>, roms: MutableList<RomEntry>): Boolean {
+        val cursor = RomFolder.queryChildren(context, tree, documentId) ?: return false
+        cursors.add(cursor)
+        RomFolder.entries(cursor).forEach { entry ->
+            if (!entry.isDirectory) {
+                roms.add(entry)
+            } else if (depth < MAX_DEPTH && cursors.size < MAX_FOLDERS) {
+                scan(tree, entry.documentId, depth + 1, cursors, roms)
+            }
+        }
+        return true
+    }
+
+    private fun closeCursors() {
+        cursors.forEach {
             it.unregisterContentObserver(observer)
             it.close()
         }
-        cursor = null
+        cursors = emptyList()
     }
 }
