@@ -71,8 +71,9 @@ abstract class BaseActivity : AppCompatActivity() {
         }
     }
 
+    // The app takes the colour chosen for the skin, so there's a single colour setting
     private fun getThemeResource(): Int {
-        return when (prefs.getString("theme", null)) {
+        return when (prefs.getString("color", null)) {
             "Berry" -> R.style.Theme_GBCC_Berry
             "Dandelion" -> R.style.Theme_GBCC_Dandelion
             "Grape" -> R.style.Theme_GBCC_Grape

@@ -108,8 +108,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
         preferenceManager.findPreference<Preference>("version")?.summary = BuildConfig.VERSION_NAME
 
-        val theme = preferenceManager.findPreference<SummaryListPreference>("theme")
-        theme?.setOnPreferenceChangeListener { _, _ ->
+        // The skin colour is also the app's colour, so the screen is redrawn with it
+        val skinColour = preferenceManager.findPreference<SummaryListPreference>("color")
+        skinColour?.setOnPreferenceChangeListener { _, _ ->
             activity?.recreate()
             return@setOnPreferenceChangeListener true
         }

@@ -37,15 +37,6 @@
     <string name="game_options">Game options</string>
     <string name="rename_game">Rename</string>
     <string name="game_name_hint">Name shown in GBCG (the file keeps its name)</string>
-    <string name="pause_resume">Resume</string>
-    <string name="pause_save_state">Save state</string>
-    <string name="pause_load_state">Load state</string>
-    <string name="pause_turbo_on">Turn turbo on</string>
-    <string name="pause_turbo_off">Turn turbo off</string>
-    <string name="pause_restart">Restart game</string>
-    <string name="pause_quit">Quit game</string>
-    <string name="state_slot_saved">Slot <xliff:g>%1$d</xliff:g> · <xliff:g>%2$s</xliff:g></string>
-    <string name="state_slot_empty">Slot <xliff:g>%1$d</xliff:g> · empty</string>
     <string name="has_save">Has a save</string>
     <string name="add_shortcut">Add shortcut</string>
     <string name="overwrite_confirmation">Select save files to overwrite:</string>
@@ -92,7 +83,7 @@
     <string name="settings_category_controls">Controls</string>
     <string name="settings_category_controls_summary">On-screen buttons, vibration, turbo and gamepads</string>
     <string name="settings_category_image">Picture</string>
-    <string name="settings_category_image_summary">Shaders, palettes, skin colours and app theme</string>
+    <string name="settings_category_image_summary">Shaders, palettes and colours</string>
     <string name="settings_category_sound">Sound</string>
     <string name="settings_category_sound_summary">Volume and background music</string>
     <string name="settings_category_advanced">Advanced</string>
@@ -156,7 +147,7 @@
     <string name="settings_dmg_color_light">Light</string>
     <string name="settings_dmg_color_dark">Dark</string>
 
-    <string name="settings_color">GBC colour</string>
+    <string name="settings_color">Colour (skin and app)</string>
     <string name="settings_color_berry">Red</string>
     <string name="settings_color_dandelion">Yellow</string>
     <string name="settings_color_grape">Purple</string>
@@ -179,7 +170,6 @@
     <string name="settings_bluetooth_latency_summary">Increased latency reduces stuttering</string>
     <string name="settings_bluetooth_latency_units" translatable="false">\u00A0ms</string>
 
-    <string name="settings_theme">App colour theme</string>
 
     <string name="settings_night_mode">Night mode</string>
     <string name="settings_night_mode_system">System</string>

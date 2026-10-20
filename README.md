@@ -42,11 +42,8 @@ El fork recién empieza. Por ahora, lo distinto del original es:
   con un selector en Settings > Language (o en el idioma por app de Android 13 y
   superior). Los mensajes que dibuja el núcleo dentro del juego siguen en inglés.
 - **Ajustes reorganizados:** Controls, Picture, Sound, Advanced y About (versión,
-  código fuente y licencias), en vez de las cinco categorías originales.
-- **Menú de pausa:** al tocar la pantalla del juego (o el botón de menú de un
-  mando) el juego se pausa y aparece un menú de Android: continuar, guardar y
-  cargar estado (9 ranuras, con la fecha de cada una), turbo, opciones del juego,
-  reiniciar y salir. Reemplaza al menú que dibujaba el núcleo.
+  código fuente y licencias), en vez de las cinco categorías originales. Un solo
+  ajuste de color pinta la carcasa y la app.
 - **Android 16 (API 36):** la app apunta a la versión que exige Google Play desde
   agosto de 2026, con herramientas al día (Android Gradle Plugin 8.13, Gradle 8.14,
   Kotlin 2.2), el núcleo compilado con el NDK r28 (alineado a páginas de 16 KB) y

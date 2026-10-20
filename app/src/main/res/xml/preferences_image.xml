@@ -60,14 +60,6 @@
         app:title="@string/settings_group_app">
 
         <com.philj56.gbcc.settings.SummaryListPreference
-            app:defaultValue="Teal"
-            app:entries="@array/color_names_array"
-            app:entryValues="@array/color_values_array"
-            app:key="theme"
-            app:title="@string/settings_theme"
-            app:iconSpaceReserved="false" />
-
-        <com.philj56.gbcc.settings.SummaryListPreference
             app:defaultValue="auto"
             app:entries="@array/night_mode_names_array"
             app:entryValues="@array/night_mode_values_array"

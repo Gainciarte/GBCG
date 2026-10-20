@@ -32,15 +32,6 @@
     <string name="game_options">Opzioni del gioco</string>
     <string name="rename_game">Rinomina</string>
     <string name="game_name_hint">Nome in GBCG (il file mantiene il suo)</string>
-    <string name="pause_resume">Riprendi</string>
-    <string name="pause_save_state">Salva stato</string>
-    <string name="pause_load_state">Carica stato</string>
-    <string name="pause_turbo_on">Attiva turbo</string>
-    <string name="pause_turbo_off">Disattiva turbo</string>
-    <string name="pause_restart">Riavvia gioco</string>
-    <string name="pause_quit">Esci dal gioco</string>
-    <string name="state_slot_saved">Slot <xliff:g>%1$d</xliff:g> · <xliff:g>%2$s</xliff:g></string>
-    <string name="state_slot_empty">Slot <xliff:g>%1$d</xliff:g> · vuoto</string>
     <string name="has_save">Ha un salvataggio</string>
     <string name="add_shortcut">Aggiungi scorciatoia</string>
     <string name="overwrite_confirmation">Scegli i salvataggi da sovrascrivere:</string>
@@ -87,7 +78,7 @@
     <string name="settings_category_controls">Controlli</string>
     <string name="settings_category_controls_summary">Pulsanti su schermo, vibrazione, turbo e controller</string>
     <string name="settings_category_image">Immagine</string>
-    <string name="settings_category_image_summary">Shader, tavolozze, colori della scocca e tema dell\'app</string>
+    <string name="settings_category_image_summary">Shader, tavolozze e colori</string>
     <string name="settings_category_sound">Audio</string>
     <string name="settings_category_sound_summary">Volume e musica di sottofondo</string>
     <string name="settings_category_advanced">Avanzate</string>
@@ -148,7 +139,7 @@
     <string name="settings_dmg_color_light">Chiaro</string>
     <string name="settings_dmg_color_dark">Scuro</string>
 
-    <string name="settings_color">Colore GBC</string>
+    <string name="settings_color">Colore (scocca e app)</string>
     <string name="settings_color_berry">Rosso</string>
     <string name="settings_color_dandelion">Giallo</string>
     <string name="settings_color_grape">Viola</string>
@@ -170,7 +161,6 @@
     <string name="settings_bluetooth_latency">Latenza audio Bluetooth</string>
     <string name="settings_bluetooth_latency_summary">Una latenza maggiore riduce le interruzioni</string>
 
-    <string name="settings_theme">Colore dell\'app</string>
 
     <string name="settings_night_mode">Modalità scura</string>
     <string name="settings_night_mode_system">Sistema</string>

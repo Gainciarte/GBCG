@@ -32,15 +32,6 @@
     <string name="game_options">Spieloptionen</string>
     <string name="rename_game">Umbenennen</string>
     <string name="game_name_hint">Name in GBCG (die Datei behält ihren Namen)</string>
-    <string name="pause_resume">Fortsetzen</string>
-    <string name="pause_save_state">Zustand speichern</string>
-    <string name="pause_load_state">Zustand laden</string>
-    <string name="pause_turbo_on">Turbo einschalten</string>
-    <string name="pause_turbo_off">Turbo ausschalten</string>
-    <string name="pause_restart">Spiel neu starten</string>
-    <string name="pause_quit">Spiel beenden</string>
-    <string name="state_slot_saved">Platz <xliff:g>%1$d</xliff:g> · <xliff:g>%2$s</xliff:g></string>
-    <string name="state_slot_empty">Platz <xliff:g>%1$d</xliff:g> · leer</string>
     <string name="has_save">Hat einen Spielstand</string>
     <string name="add_shortcut">Verknüpfung hinzufügen</string>
     <string name="overwrite_confirmation">Wähle die Spielstände, die überschrieben werden sollen:</string>
@@ -87,7 +78,7 @@
     <string name="settings_category_controls">Steuerung</string>
     <string name="settings_category_controls_summary">Bildschirmtasten, Vibration, Turbo und Controller</string>
     <string name="settings_category_image">Bild</string>
-    <string name="settings_category_image_summary">Shader, Paletten, Gehäusefarben und App-Design</string>
+    <string name="settings_category_image_summary">Shader, Paletten und Farben</string>
     <string name="settings_category_sound">Ton</string>
     <string name="settings_category_sound_summary">Lautstärke und Hintergrundmusik</string>
     <string name="settings_category_advanced">Erweitert</string>
@@ -148,7 +139,7 @@
     <string name="settings_dmg_color_light">Hell</string>
     <string name="settings_dmg_color_dark">Dunkel</string>
 
-    <string name="settings_color">GBC-Farbe</string>
+    <string name="settings_color">Farbe (Gehäuse und App)</string>
     <string name="settings_color_berry">Rot</string>
     <string name="settings_color_dandelion">Gelb</string>
     <string name="settings_color_grape">Lila</string>
@@ -170,7 +161,6 @@
     <string name="settings_bluetooth_latency">Bluetooth-Audiolatenz</string>
     <string name="settings_bluetooth_latency_summary">Höhere Latenz verringert Aussetzer</string>
 
-    <string name="settings_theme">App-Farbe</string>
 
     <string name="settings_night_mode">Dunkelmodus</string>
     <string name="settings_night_mode_system">System</string>
