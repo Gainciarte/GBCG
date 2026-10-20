@@ -150,6 +150,11 @@ class SkinDrawable(context: Context, private val look: SkinLook) : Drawable() {
         const val RUBBER = 0xFF9AD0DA.toInt()
         const val RUBBER_EDGE = 0xFF6FAEBC.toInt()
         const val FROST = 0xFFE8EDED.toInt()
+
+        // The DMG's recesses: how far the capsule under A and B, and each pill's well, reach
+        // beyond the buttons (dp)
+        const val DMG_CAPSULE = 9f
+        const val DMG_WELL = 4f
     }
 
     private val density = context.resources.displayMetrics.density
@@ -310,10 +315,10 @@ class SkinDrawable(context: Context, private val look: SkinLook) : Drawable() {
     private fun placeSpeaker(p: SkinParts, w: Float, h: Float, labels: List<RectF>): Speaker? {
         val blocked = blockers(p, dp(8f)) + labels.map { RectF(it).apply { inset(-dp(4f), -dp(4f)) } }
         var r = min(w, h) * 0.105f
-        // As on the real one: beside the pills, its middle a little below theirs; in
-        // landscape, where the pills are on the other side, below A and B
+        // In portrait, halfway between A/B and the pills, a little left of A (where Gustavo
+        // wants it); in landscape, where the pills are on the other side, below A and B
         val ideal = if (portrait(w, h)) {
-            PointF(p.a.centerX() - dp(6f), max(p.select.centerY() + r * 0.15f, p.b.bottom + r + dp(8f)))
+            PointF(p.a.centerX() - w * 0.04f, (max(p.a.bottom, p.b.bottom) + min(p.select.top, p.start.top)) / 2)
         } else {
             PointF(p.a.centerX() - dp(6f), max(p.a.bottom, p.b.bottom) + r + dp(12f))
         }
@@ -508,11 +513,11 @@ class SkinDrawable(context: Context, private val look: SkinLook) : Drawable() {
         val cx = (p.a.centerX() + p.b.centerX()) / 2
         val cy = (p.a.centerY() + p.b.centerY()) / 2
         val half = hypot(p.a.centerX() - p.b.centerX(), p.a.centerY() - p.b.centerY()) / 2
-        val cr = max(p.a.width(), p.b.width()) / 2 + dp(9f)
+        val cr = max(p.a.width(), p.b.width()) / 2 + dp(DMG_CAPSULE)
         recess(cx - half - cr, cy - cr, cx + half + cr, cy + cr, cr, angle, cx, cy)
         // Wells around the pills
         for (r in listOf(p.select, p.start)) {
-            val g = dp(4f)
+            val g = dp(DMG_WELL)
             recess(r.left - g, r.top - g, r.right + g, r.bottom + g, r.height() / 2 + g, p.pillRotation,
                 r.centerX(), r.centerY())
         }
@@ -558,7 +563,9 @@ class SkinDrawable(context: Context, private val look: SkinLook) : Drawable() {
                 Label(label, r.right + gap, r.centerY() + ts * 0.3f, Paint.Align.LEFT,
                     RectF(r.right + gap, r.centerY() - ts / 2, r.right + gap + tw, r.centerY() + ts / 2)),
             )
-            val fits = candidates.firstOrNull { c ->
+            // Pills one above the other (landscape): both labels beside them, alike
+            val order = if (stacked(p)) listOf(candidates[2], candidates[3], candidates[0], candidates[1]) else candidates
+            val fits = order.firstOrNull { c ->
                 val b = c.box
                 inside(b.left, b.top, dp(4f), w, h) && inside(b.right, b.top, dp(4f), w, h) &&
                     inside(b.left, b.bottom, dp(4f), w, h) && inside(b.right, b.bottom, dp(4f), w, h) &&
@@ -568,6 +575,10 @@ class SkinDrawable(context: Context, private val look: SkinLook) : Drawable() {
         }
         return placed
     }
+
+    /** Whether Select and Start are one above the other rather than side by side. */
+    private fun stacked(p: SkinParts) =
+        kotlin.math.abs(p.select.centerY() - p.start.centerY()) > max(p.select.height(), p.start.height())
 
     private fun gbcLabelPaint() {
         text.typeface = Typeface.create("sans-serif-condensed", Typeface.BOLD)
@@ -603,14 +614,26 @@ class SkinDrawable(context: Context, private val look: SkinLook) : Drawable() {
         fill.color = if (look.dark) 0xFF8D93B5.toInt() else 0xFF24255E.toInt()
         // About as wide as the pill, as on the real one
         val cap = p.select.width() / DmgLettering.width("SELECT")
+        // Below the capsule A and B sit in (its edge is DMG_CAPSULE beyond each button)
         for ((r, label) in listOf(p.b to "B", p.a to "A")) {
-            DmgLettering.draw(canvas, label, r.centerX() + r.width() * 0.1f, r.bottom + cap * 1.9f, cap, fill)
+            DmgLettering.draw(canvas, label, r.centerX() + r.width() * 0.08f,
+                r.centerY() + r.width() / 2 + dp(DMG_CAPSULE) + cap * 0.7f + cap, cap, fill)
         }
+        // Below each pill's well, turned like it; beside the pills when they're one above the
+        // other, as in landscape
+        val well = dp(DMG_WELL)
+        val beside = stacked(p)
         for ((r, label) in listOf(p.select to "SELECT", p.start to "START")) {
-            canvas.save()
-            canvas.rotate(p.pillRotation, r.centerX(), r.centerY())
-            DmgLettering.draw(canvas, label, r.centerX(), r.bottom + cap * 1.75f, cap, fill)
-            canvas.restore()
+            if (beside) {
+                // Level, so a long label doesn't run down off the body
+                DmgLettering.draw(canvas, label, rotatedBounds(r, p.pillRotation).left - well - cap * 0.6f,
+                    r.centerY() + cap / 2, cap, fill, Paint.Align.RIGHT)
+            } else {
+                canvas.save()
+                canvas.rotate(p.pillRotation, r.centerX(), r.centerY())
+                DmgLettering.draw(canvas, label, r.centerX(), r.bottom + well + cap * 0.6f + cap, cap, fill)
+                canvas.restore()
+            }
         }
     }
 
@@ -1015,15 +1038,21 @@ private object DmgLettering {
     /** Width of the text, in cap heights. */
     fun width(text: String) = text.sumOf { (glyphWidth(it) + GAP).toDouble() }.toFloat() - GAP
 
-    /** Draws the text centred on x, with its baseline at y, cap tall. */
-    fun draw(canvas: Canvas, text: String, x: Float, y: Float, cap: Float, paint: Paint) {
+    /** Draws the text at x (centred on it, or ending or starting there), with its baseline
+     * at y, cap tall. */
+    fun draw(canvas: Canvas, text: String, x: Float, y: Float, cap: Float, paint: Paint,
+             align: Paint.Align = Paint.Align.CENTER) {
         val style = paint.style
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = STROKE * cap
         paint.strokeCap = Paint.Cap.BUTT
         paint.strokeJoin = Paint.Join.MITER
         paint.pathEffect = android.graphics.CornerPathEffect(0.22f * cap)
-        var left = x - width(text) * cap / 2
+        var left = when (align) {
+            Paint.Align.RIGHT -> x - width(text) * cap
+            Paint.Align.LEFT -> x
+            else -> x - width(text) * cap / 2
+        }
         for (ch in text) {
             canvas.drawPath(glyph(ch, left, y - cap, cap), paint)
             if (ch == 'B') {
