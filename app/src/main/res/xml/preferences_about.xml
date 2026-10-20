@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- The summary is filled in with the version name by SettingsFragment -->
+    <Preference
+        app:iconSpaceReserved="false"
+        app:key="version"
+        app:selectable="false"
+        app:title="@string/settings_version" />
+
+    <Preference
+        app:iconSpaceReserved="false"
+        app:key="source"
+        app:title="@string/settings_source"
+        app:summary="@string/settings_source_summary">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:data="https://github.com/Gainciarte/GBCG" />
+    </Preference>
+
+    <Preference
+        app:key="licenses"
+        app:title="@string/settings_licenses"
+        app:iconSpaceReserved="false">
+        <intent
+            android:targetPackage="@string/application_id"
+            android:targetClass="com.philj56.gbcc.LicenseListActivity" />
+    </Preference>
+
+</PreferenceScreen>

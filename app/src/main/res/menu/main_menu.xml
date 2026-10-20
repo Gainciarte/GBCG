@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Only Settings stays on the bar; the rest goes in its overflow menu -->
 <menu
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
@@ -8,21 +9,21 @@
         android:icon="@drawable/ic_folder_open_24dp"
         android:title="@string/choose_rom_folder"
         app:maxButtonHeight="?attr/actionBarSize"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
 
     <item
         android:id="@+id/importItem"
         android:icon="@drawable/ic_library_add_24dp"
         android:title="@string/import_saves"
         app:maxButtonHeight="?attr/actionBarSize"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
 
     <item
         android:id="@+id/exportItem"
         android:icon="@drawable/ic_save_move_24dp"
         android:title="@string/export_saves"
         app:maxButtonHeight="?attr/actionBarSize"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
 
     <item
         android:id="@+id/settingsItem"

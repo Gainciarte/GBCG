@@ -1,5 +1,6 @@
 package com.philj56.gbcc.main
 
+import android.annotation.SuppressLint
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,10 +18,21 @@ class FileAdapter(
 ) :
     ListAdapter<RomEntry, FileAdapter.FileViewHolder>(FileDiffCallback) {
 
-    class FileViewHolder(itemView: View, val onClick: (RomEntry) -> Unit, val onShowActions: (RomEntry) -> Unit) :
+    /** Base names of the games that have a save, to mark them in the list. */
+    var gamesWithSaves: Set<String> = emptySet()
+        @SuppressLint("NotifyDataSetChanged")
+        set(value) {
+            if (value != field) {
+                field = value
+                notifyDataSetChanged()
+            }
+        }
+
+    class FileViewHolder(itemView: View, private val adapter: FileAdapter, val onClick: (RomEntry) -> Unit, val onShowActions: (RomEntry) -> Unit) :
         RecyclerView.ViewHolder(itemView) {
         private val textView = itemView.findViewById<TextView>(R.id.fileEntry)
         private val imageView = itemView.findViewById<ImageView>(R.id.fileIcon)
+        private val saveIcon = itemView.findViewById<ImageView>(R.id.fileSaveIcon)
         private val moreButton = itemView.findViewById<ImageButton>(R.id.fileMore)
         private var currentEntry: RomEntry? = null
 
@@ -29,7 +41,7 @@ class FileAdapter(
                 currentEntry?.let { onClick(it) }
             }
             itemView.setOnLongClickListener {
-                currentEntry?.takeUnless { it.isDirectory }?.let { onShowActions(it) }
+                currentEntry?.let { onShowActions(it) }
                 return@setOnLongClickListener true
             }
             // The ⋮ button opens the same actions as a long press
@@ -40,15 +52,8 @@ class FileAdapter(
 
         fun bind(entry: RomEntry) {
             currentEntry = entry
-            imageView.setImageResource(
-                when {
-                    entry.isDirectory -> R.drawable.ic_folder_34dp
-                    entry.extension.equals("gbc", ignoreCase = true) -> R.drawable.ic_file_gbc
-                    else -> R.drawable.ic_file_dmg
-                }
-            )
-            // Folders have no actions
-            moreButton.visibility = if (entry.isDirectory) View.INVISIBLE else View.VISIBLE
+            imageView.setImageResource(if (entry.isGbc) R.drawable.ic_file_gbc else R.drawable.ic_file_dmg)
+            saveIcon.visibility = if (entry.baseName in adapter.gamesWithSaves) View.VISIBLE else View.GONE
             textView.text = entry.baseName
         }
     }
@@ -66,7 +71,7 @@ class FileAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FileViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.entry_file, parent, false)
-        return FileViewHolder(view, onClick, onShowActions)
+        return FileViewHolder(view, this, onClick, onShowActions)
     }
 
     override fun onBindViewHolder(holder: FileViewHolder, position: Int) {

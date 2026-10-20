@@ -44,24 +44,24 @@ class SettingsActivity : BaseSettingsActivity() {
     override val preferenceResource = R.xml.preferences
 }
 
-class AudioSettingsActivity : BaseSettingsActivity() {
-    override val preferenceResource = R.xml.preferences_audio
+class ControlsSettingsActivity : BaseSettingsActivity() {
+    override val preferenceResource = R.xml.preferences_controls
 }
 
-class BehaviourSettingsActivity : BaseSettingsActivity() {
-    override val preferenceResource = R.xml.preferences_behaviour
+class ImageSettingsActivity : BaseSettingsActivity() {
+    override val preferenceResource = R.xml.preferences_image
 }
 
-class DisplaySettingsActivity : BaseSettingsActivity() {
-    override val preferenceResource = R.xml.preferences_display
+class SoundSettingsActivity : BaseSettingsActivity() {
+    override val preferenceResource = R.xml.preferences_sound
 }
 
-class GraphicsSettingsActivity : BaseSettingsActivity() {
-    override val preferenceResource = R.xml.preferences_graphics
+class AdvancedSettingsActivity : BaseSettingsActivity() {
+    override val preferenceResource = R.xml.preferences_advanced
 }
 
-class MiscellaneousSettingsActivity : BaseSettingsActivity() {
-    override val preferenceResource = R.xml.preferences_miscellaneous
+class AboutSettingsActivity : BaseSettingsActivity() {
+    override val preferenceResource = R.xml.preferences_about
 }
 
 class SettingsFragment : PreferenceFragmentCompat() {
@@ -91,6 +91,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
             }
             return@setOnPreferenceChangeListener true
         }
+
+        preferenceManager.findPreference<Preference>("version")?.summary = BuildConfig.VERSION_NAME
 
         val theme = preferenceManager.findPreference<SummaryListPreference>("theme")
         theme?.setOnPreferenceChangeListener { _, _ ->

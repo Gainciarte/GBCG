@@ -1,10 +1,12 @@
 package com.philj56.gbcc.romConfig
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.preference.ListPreference
 import androidx.preference.Preference
 import androidx.preference.PreferenceFragmentCompat
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.philj56.gbcc.CheatActivity
 import com.philj56.gbcc.R
 import com.philj56.gbcc.RomConfigActivity
 import com.philj56.gbcc.materialPreferences.MaterialListPreferenceDialogFragmentCompat
@@ -30,6 +32,13 @@ class RomConfigFragment : PreferenceFragmentCompat() {
     }
 
     override fun onPreferenceTreeClick(preference: Preference): Boolean {
+        if (preference.key == "cheats") {
+            val intent = Intent(requireContext(), CheatActivity::class.java).apply {
+                putExtra("file", (requireActivity() as RomConfigActivity).romFileName)
+            }
+            startActivity(intent)
+            return true
+        }
         if (preference.key == "delete") {
             val context = requireContext()
             MaterialAlertDialogBuilder(context)

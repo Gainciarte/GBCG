@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:title="@string/settings_group_saving">
+
+        <SwitchPreferenceCompat
+            app:widgetLayout="@layout/preference_widget_material_switch"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false"
+            app:key="auto_resume"
+            app:title="@string/settings_auto_resume"
+            app:summary="@string/settings_auto_resume_summary" />
+
+        <SwitchPreferenceCompat
+            app:widgetLayout="@layout/preference_widget_material_switch"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false"
+            app:key="auto_save"
+            app:title="@string/settings_auto_save"
+            app:summary="@string/settings_auto_save_summary" />
+
+        <SwitchPreferenceCompat
+            app:widgetLayout="@layout/preference_widget_material_switch"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false"
+            app:key="back_prompt"
+            app:title="@string/settings_back_prompt"
+            app:summary="@string/settings_back_prompt_summary" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:title="@string/settings_group_emulation">
+
+        <SwitchPreferenceCompat
+            app:widgetLayout="@layout/preference_widget_material_switch"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false"
+            app:key="show_fps"
+            app:title="@string/settings_fps" />
+
+        <SwitchPreferenceCompat
+            app:widgetLayout="@layout/preference_widget_material_switch"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false"
+            app:key="frame_blend"
+            app:title="@string/settings_frame_blend"
+            app:summary="@string/settings_frame_blend_summary"/>
+
+        <SwitchPreferenceCompat
+            app:widgetLayout="@layout/preference_widget_material_switch"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false"
+            app:key="interlacing"
+            app:title="@string/settings_interlacing"
+            app:summary="@string/settings_interlacing_summary"/>
+
+        <SwitchPreferenceCompat
+            app:widgetLayout="@layout/preference_widget_material_switch"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false"
+            app:key="vsync"
+            app:title="@string/settings_vsync"
+            app:summary="@string/settings_vsync_summary"/>
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:title="@string/settings_group_latency">
+
+        <SwitchPreferenceCompat
+            app:widgetLayout="@layout/preference_widget_material_switch"
+            app:disableDependentsState="true"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false"
+            app:key="audio_low_latency"
+            app:title="@string/settings_audio_low_latency"
+            app:summary="@string/settings_audio_low_latency_summary" />
+
+        <com.philj56.gbcc.settings.UnitSeekbarPreference
+            android:layout="@layout/preference_widget_slider"
+            app:dependency="audio_low_latency"
+            app:min="40"
+            android:max="500"
+            app:defaultValue="40"
+            app:showSeekBarValue="true"
+            app:key="audio_latency_ms"
+            app:title="@string/settings_audio_latency"
+            app:summary="@string/settings_audio_latency_summary"
+            app:iconSpaceReserved="false" />
+
+        <com.philj56.gbcc.settings.UnitSeekbarPreference
+            android:layout="@layout/preference_widget_slider"
+            app:min="40"
+            android:max="500"
+            app:defaultValue="40"
+            app:showSeekBarValue="true"
+            app:key="bluetooth_latency_ms"
+            app:title="@string/settings_bluetooth_latency"
+            app:summary="@string/settings_bluetooth_latency_summary"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:title="@string/settings_group_accessories">
+
+        <SwitchPreferenceCompat
+            app:widgetLayout="@layout/preference_widget_material_switch"
+            app:defaultValue="true"
+            app:key="animate_printer"
+            app:title="@string/settings_animate_printer"
+            app:summary="@string/settings_animate_printer_summary"
+            app:iconSpaceReserved="false" />
+
+        <com.philj56.gbcc.settings.SummaryListPreference
+            app:defaultValue="back"
+            app:entries="@array/camera_names_array"
+            app:entryValues="@array/camera_values_array"
+            app:key="camera"
+            app:title="@string/settings_camera"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

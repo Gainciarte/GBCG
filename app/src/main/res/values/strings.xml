@@ -15,18 +15,15 @@
     <string name="groups">Groups</string>
     <string name="new_group">New group</string>
     <string name="group_name_hint">Group name</string>
-    <string name="rom_name_hint">ROM name</string>
     <string name="rename_group">Rename group</string>
     <string name="delete_group">Delete group</string>
     <string name="delete_group_confirmation">Delete the group \"<xliff:g>%1$s</xliff:g>\"? The games stay in your folder.</string>
     <string name="group_exists">There\'s already a group called \"<xliff:g>%1$s</xliff:g>\"</string>
     <string name="group_empty">There are no games in this group yet. Add them from each game\'s ⋮ menu.</string>
     <string name="message_import_not_save">\"<xliff:g>%1$s</xliff:g>\" is not a save. To add games, copy them to your ROM folder.</string>
-    <string name="message_failed_rename">Couldn\'t rename <xliff:g>%1$s</xliff:g></string>
     <string name="message_failed_open_rom">Couldn\'t open <xliff:g>%1$s</xliff:g></string>
     <string name="create_folder_hint">Folder name</string>
     <string name="export_saves">Export saves</string>
-    <string name="rename_rom">Rename ROM</string>
     <string name="more_options">More options</string>
     <string name="delete">Delete</string>
     <string name="select_action">Select action</string>
@@ -36,8 +33,17 @@
         <item quantity="other">Are you sure you wish to delete your saves for these %d games?</item>
     </plurals>
     <string name="delete_config_confirmation">Are you sure you wish to delete your config for this game?</string>
-    <string name="edit_config">Edit game config</string>
-    <string name="edit_cheats">Edit cheats</string>
+    <string name="game_options">Game options</string>
+    <string name="pause_resume">Resume</string>
+    <string name="pause_save_state">Save state</string>
+    <string name="pause_load_state">Load state</string>
+    <string name="pause_turbo_on">Turn turbo on</string>
+    <string name="pause_turbo_off">Turn turbo off</string>
+    <string name="pause_restart">Restart game</string>
+    <string name="pause_quit">Quit game</string>
+    <string name="state_slot_saved">Slot <xliff:g>%1$d</xliff:g> · <xliff:g>%2$s</xliff:g></string>
+    <string name="state_slot_empty">Slot <xliff:g>%1$d</xliff:g> · empty</string>
+    <string name="has_save">Has a save</string>
     <string name="add_shortcut">Add shortcut</string>
     <string name="overwrite_confirmation">Select save files to overwrite:</string>
     <string name="error_zip_title">Error parsing zip file: <xliff:g>%1$s</xliff:g></string>
@@ -63,13 +69,14 @@
     <string name="button_reboot">Reboot</string>
 
     <!-- RomConfigActivity -->
-    <string name="rom_config_title">Rom config</string>
+    <string name="rom_config_title">Game options</string>
     <string name="rom_config_palette">Palette</string>
     <string name="rom_config_shader">Shader</string>
     <string name="rom_config_delete">Delete config</string>
 
     <!-- CheatActivity -->
     <string name="cheat_title">Cheats</string>
+    <string name="cheats_summary">Game Genie and GameShark codes for this game</string>
     <string name="cheat_add_description">Add cheat</string>
     <string name="cheat_edit_description">Edit cheat</string>
     <string name="cheat_delete_description">Delete cheat</string>
@@ -78,16 +85,28 @@
 
     <!-- SettingsActivity -->
     <string name="settings_title">Settings</string>
-    <string name="settings_category_behaviour">Behaviour</string>
-    <string name="settings_category_behaviour_summary">General emulator behaviour: auto-resume, vibration, gamepad mapping etc.</string>
-    <string name="settings_category_graphics">Graphics</string>
-    <string name="settings_category_graphics_summary">How the emulated Game Boy screen looks</string>
-    <string name="settings_category_display">Display</string>
-    <string name="settings_category_display_summary">Which controls to show, Game Boy style and layout</string>
-    <string name="settings_category_audio">Audio</string>
-    <string name="settings_category_audio_summary">Audio latency and volume</string>
-    <string name="settings_category_miscellaneous">Miscellaneous</string>
-    <string name="settings_category_miscellaneous_summary">App appearance, uncommon settings and licenses</string>
+    <string name="settings_category_controls">Controls</string>
+    <string name="settings_category_controls_summary">On-screen buttons, vibration, turbo and gamepads</string>
+    <string name="settings_category_image">Picture</string>
+    <string name="settings_category_image_summary">Shaders, palettes, skin colours and app theme</string>
+    <string name="settings_category_sound">Sound</string>
+    <string name="settings_category_sound_summary">Volume and background music</string>
+    <string name="settings_category_advanced">Advanced</string>
+    <string name="settings_category_advanced_summary">Resuming and saving, frame sync, audio latency and accessories</string>
+    <string name="settings_category_about">About</string>
+    <string name="settings_category_about_summary">Version, source code and licenses</string>
+    <string name="settings_group_onscreen">On-screen buttons</string>
+    <string name="settings_group_vibration">Vibration</string>
+    <string name="settings_group_turbo_gamepad">Turbo and gamepads</string>
+    <string name="settings_group_game">Game</string>
+    <string name="settings_group_app">App</string>
+    <string name="settings_group_saving">Resuming and saving</string>
+    <string name="settings_group_emulation">Frames</string>
+    <string name="settings_group_latency">Audio latency</string>
+    <string name="settings_group_accessories">Accessories</string>
+    <string name="settings_version">Version</string>
+    <string name="settings_source">Source code</string>
+    <string name="settings_source_summary">github.com/Gainciarte/GBCG</string>
 
     <string name="settings_animate_buttons">Animate button presses</string>
     <string name="settings_auto_resume">Auto-resume</string>

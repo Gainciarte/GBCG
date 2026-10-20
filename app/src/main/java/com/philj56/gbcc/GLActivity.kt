@@ -40,6 +40,7 @@ import android.view.*
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -57,9 +58,11 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.philj56.gbcc.databinding.ActivityGlBinding
+import com.philj56.gbcc.main.RomHistory
 import java.io.File
 import java.io.IOException
 import java.nio.ByteBuffer
+import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
@@ -172,6 +175,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
     private val transitionToGameboy = AnimatorSet()
     private lateinit var printerScrollAnimation : ObjectAnimator
     private var currentScreen = Screen.GAMEBOY
+    private var pauseDialog: AlertDialog? = null
 
     private lateinit var binding: ActivityGlBinding
 
@@ -194,7 +198,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
     private external fun press(button: Int, pressed: Boolean)
     private external fun isPressed(button: Int) : Boolean
     private external fun toggleTurbo(): Boolean
-    private external fun toggleMenu()
+    private external fun setPaused(paused: Boolean)
     private external fun saveState(state: Int)
     private external fun loadState(state: Int)
     private external fun getOptions(): ByteArray
@@ -405,7 +409,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
         window.setBackgroundDrawableResource(android.R.color.black)
         binding.root.setBackgroundResource(bgColor)
 
-        binding.screen.setOnClickListener { toggleMenu() }
+        binding.screen.setOnClickListener { showPauseMenu() }
         binding.turboToggle.setOnClickListener { toggleTurbo() }
 
         if (!gbc) {
@@ -534,6 +538,11 @@ class GLActivity : BaseActivity(), SensorEventListener {
                 Toast.LENGTH_SHORT
             ).show()
             finish()
+            return
+        }
+        if (savedInstanceState == null) {
+            // Recently played games are listed first
+            RomHistory.markPlayed(this, File(filename).name)
         }
 
         updateLayout(
@@ -715,6 +724,8 @@ class GLActivity : BaseActivity(), SensorEventListener {
     }
 
     private fun startGBCC() {
+        // The pause menu is closed whenever the game stops, so start unpaused
+        setPaused(false)
         val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
         val sampleRate: Int
@@ -817,6 +828,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
     }
 
     private fun stopGBCC() {
+        pauseDialog?.dismiss()
         if (loadedSuccessfully) {
             resumePrinting = (printerAudio.playState == AudioTrack.PLAYSTATE_PLAYING)
             stopPrinting()
@@ -1155,6 +1167,92 @@ class GLActivity : BaseActivity(), SensorEventListener {
         return super.onGenericMotionEvent(event)
     }
 
+    /*
+     * The pause menu, opened by tapping the screen or a gamepad's menu button. It replaces
+     * the core's own menu, which is drawn in C, small and only in English.
+     */
+    private fun showPauseMenu() {
+        if (!loadedSuccessfully || pauseDialog?.isShowing == true) {
+            return
+        }
+        setPaused(true)
+        val turbo = checkTurboFun()
+        val items = arrayOf(
+            getString(R.string.pause_resume),
+            getString(R.string.pause_save_state),
+            getString(R.string.pause_load_state),
+            getString(if (turbo) R.string.pause_turbo_off else R.string.pause_turbo_on),
+            getString(R.string.game_options),
+            getString(R.string.pause_restart),
+            getString(R.string.pause_quit)
+        )
+        // Choosing a slot keeps the game paused until that dialog closes
+        var keepPaused = false
+        showImmersiveDialog(
+            MaterialAlertDialogBuilder(this)
+                .setTitle(File(filename).nameWithoutExtension)
+                .setItems(items) { _, which ->
+                    when (which) {
+                        1 -> { keepPaused = true; showStateSlots(save = true) }
+                        2 -> { keepPaused = true; showStateSlots(save = false) }
+                        3 -> toggleTurboWrapper()
+                        4 -> startActivity(Intent(this, RomConfigActivity::class.java).apply {
+                            putExtra("file", File(filename).name)
+                        })
+                        5 -> {
+                            stopGBCC()
+                            reboot = true
+                            startGBCC()
+                        }
+                        6 -> finish()
+                    }
+                }
+                .setOnDismissListener { if (!keepPaused) setPaused(false) }
+                .create()
+        )
+    }
+
+    /** Lists the 9 save state slots, with when each was saved, to save to or load from. */
+    private fun showStateSlots(save: Boolean) {
+        val baseName = File(filename).nameWithoutExtension
+        val format = DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT)
+        val slots = (1..9).map { File(saveDir, "$baseName.s$it") }
+        val labels = slots.mapIndexed { i, file ->
+            if (file.exists()) {
+                getString(R.string.state_slot_saved, i + 1, format.format(Date(file.lastModified())))
+            } else {
+                getString(R.string.state_slot_empty, i + 1)
+            }
+        }.toTypedArray()
+        showImmersiveDialog(
+            MaterialAlertDialogBuilder(this)
+                .setTitle(if (save) R.string.pause_save_state else R.string.pause_load_state)
+                .setItems(labels) { _, which ->
+                    if (save) {
+                        saveState(which + 1)
+                    } else if (slots[which].exists()) {
+                        loadState(which + 1)
+                    }
+                }
+                // Resuming lets the core carry out the save or load
+                .setOnDismissListener { setPaused(false) }
+                .create()
+        )
+    }
+
+    /** Shows a dialog without bringing back the system bars. */
+    private fun showImmersiveDialog(dialog: AlertDialog) {
+        dialog.window?.let {
+            WindowCompat.getInsetsController(it, it.decorView).let { controller ->
+                controller.systemBarsBehavior =
+                    WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                controller.hide(WindowInsetsCompat.Type.systemBars())
+            }
+        }
+        pauseDialog = dialog
+        dialog.show()
+    }
+
     private fun showBackPrompt() {
         if (prefs.getBoolean("back_prompt", false)) {
             val dialog = MaterialAlertDialogBuilder(this)
@@ -1197,6 +1295,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
         when (action) {
             "back" -> onBackPressedDispatcher.onBackPressed()
             "turbo" -> if (pressed) toggleTurboWrapper()
+            "menu" -> if (pressed) showPauseMenu()
             else -> press(button, pressed)
         }
         return true

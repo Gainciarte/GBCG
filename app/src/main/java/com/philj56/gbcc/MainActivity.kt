@@ -53,7 +53,6 @@ import java.util.zip.ZipOutputStream
 private const val BACK_DELAY: Int = 2000
 private const val SAVE_DIR: String = "saves"
 const val IMPORTED_SAVE_SUBDIR: String = "imported"
-private const val REQUEST_RENAME = "rename"
 private const val REQUEST_NEW_GROUP = "newGroup"
 private const val REQUEST_RENAME_GROUP = "renameGroup"
 
@@ -87,11 +86,10 @@ class MainActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         PreferenceManager.setDefaultValues(this, R.xml.preferences, true)
-        PreferenceManager.setDefaultValues(this, R.xml.preferences_audio, true)
-        PreferenceManager.setDefaultValues(this, R.xml.preferences_behaviour, true)
-        PreferenceManager.setDefaultValues(this, R.xml.preferences_display, true)
-        PreferenceManager.setDefaultValues(this, R.xml.preferences_graphics, true)
-        PreferenceManager.setDefaultValues(this, R.xml.preferences_miscellaneous, true)
+        PreferenceManager.setDefaultValues(this, R.xml.preferences_controls, true)
+        PreferenceManager.setDefaultValues(this, R.xml.preferences_image, true)
+        PreferenceManager.setDefaultValues(this, R.xml.preferences_sound, true)
+        PreferenceManager.setDefaultValues(this, R.xml.preferences_advanced, true)
         AppCompatDelegate.setDefaultNightMode(
             when (PreferenceManager.getDefaultSharedPreferences(this)
                 .getString("night_mode", null)) {
@@ -128,13 +126,6 @@ class MainActivity : BaseActivity() {
             showRoms()
         }
 
-        supportFragmentManager.setFragmentResultListener(REQUEST_RENAME, this) { _, result ->
-            val documentId = result.getString(EditTextDialogFragment.RESULT_PATH)
-            val name = result.getString(EditTextDialogFragment.RESULT_TEXT)
-            if (documentId != null && name != null) {
-                renameRom(documentId, name.trim())
-            }
-        }
         supportFragmentManager.setFragmentResultListener(REQUEST_NEW_GROUP, this) { _, result ->
             val name = result.getString(EditTextDialogFragment.RESULT_TEXT)?.trim()
             // When created from a game's menu, the game goes in the new group
@@ -274,7 +265,13 @@ class MainActivity : BaseActivity() {
                 showEmptyState(R.string.rom_folder_empty, true)
             }
             else -> {
-                val shown = RomGroups.filter(selectedGroup, roms, groups) ?: roms
+                val shown = RomHistory.sortRecentFirst(
+                    RomGroups.filter(selectedGroup, roms, groups) ?: roms,
+                    RomHistory.lastPlayed(this)
+                )
+                fileAdapter.gamesWithSaves = filesDir.resolve(SAVE_DIR)
+                    .list { _, name -> name.endsWith(".sav") }
+                    ?.map { it.removeSuffix(".sav") }?.toSet() ?: emptySet()
                 fileAdapter.submitList(shown)
                 if (shown.isEmpty()) {
                     showEmptyState(R.string.group_empty, false)
@@ -412,7 +409,13 @@ class MainActivity : BaseActivity() {
                 showRoms()
             }
             .setNegativeButton(android.R.string.cancel, null)
-            .setNeutralButton(R.string.new_group) { _, _ -> showNewGroupDialog(entry.name) }
+            .setNeutralButton(R.string.new_group) { _, _ ->
+                groups.forEachIndexed { i, group ->
+                    if (checked[i]) group.roms.add(entry.name) else group.roms.remove(entry.name)
+                }
+                RomGroups.save(this, groups)
+                showNewGroupDialog(entry.name)
+            }
             .show()
     }
 
@@ -426,25 +429,8 @@ class MainActivity : BaseActivity() {
             showRomGroupsDialog(entry)
             dialog.dismiss()
         }
-        binding.buttonRenameRom.setOnClickListener {
-            EditTextDialogFragment.newInstance(
-                R.string.rename_rom,
-                entry.baseName,
-                REQUEST_RENAME,
-                entry.documentId,
-                R.string.rom_name_hint
-            ).show(supportFragmentManager, "")
-            dialog.dismiss()
-        }
         binding.buttonDeleteSave.setOnClickListener {
             showSaveDeleteDialog(entry)
-            dialog.dismiss()
-        }
-        binding.buttonEditCheats.setOnClickListener {
-            val intent = Intent(this, CheatActivity::class.java).apply {
-                putExtra("file", entry.name)
-            }
-            startActivity(intent)
             dialog.dismiss()
         }
         binding.buttonEditConfig.setOnClickListener {
@@ -456,6 +442,7 @@ class MainActivity : BaseActivity() {
         }
         binding.buttonAddShortcut.setOnClickListener {
             addShortcut(entry)
+            dialog.dismiss()
         }
     }
 
@@ -507,49 +494,6 @@ class MainActivity : BaseActivity() {
         ShortcutManagerCompat.requestPinShortcut(this, shortcut, null)
     }
 
-    private fun renameRom(documentId: String, newBaseName: String) {
-        val tree = treeUri ?: return
-        val entry = fileAdapter.currentList.firstOrNull { it.documentId == documentId } ?: return
-        val newName = if (entry.extension.isEmpty()) newBaseName else "$newBaseName.${entry.extension}"
-        val renamed = try {
-            DocumentsContract.renameDocument(contentResolver, RomFolder.documentUri(tree, documentId), newName)
-        } catch (e: Exception) {
-            // A file with that name already exists, or there's no write access to the folder
-            null
-        }
-        if (renamed == null) {
-            Toast.makeText(baseContext, getString(R.string.message_failed_rename, entry.name), Toast.LENGTH_SHORT).show()
-            return
-        }
-        // The saves, config and cheats follow the game's name
-        val oldBaseName = entry.baseName
-        val configFile = filesDir.resolve("config/$oldBaseName.cfg")
-        val cheatFile = filesDir.resolve("config/$oldBaseName.cheats")
-        val savFile = filesDir.resolve("saves/$oldBaseName.sav")
-        if (configFile.exists()) {
-            configFile.renameTo(filesDir.resolve("config/$newBaseName.cfg"))
-        }
-        if (cheatFile.exists()) {
-            cheatFile.renameTo(filesDir.resolve("config/$newBaseName.cheats"))
-        }
-        if (savFile.exists()) {
-            savFile.renameTo(filesDir.resolve("saves/$newBaseName.sav"))
-        }
-        for (n in 0..10) {
-            val state = filesDir.resolve("saves/$oldBaseName.s$n")
-            if (state.exists()) {
-                state.renameTo(filesDir.resolve("saves/$newBaseName.s$n"))
-            }
-        }
-        groups.forEach { group ->
-            if (group.roms.remove(entry.name)) {
-                group.roms.add(newName)
-            }
-        }
-        RomGroups.save(this, groups)
-        watcher.reload()
-    }
-
     private fun showSaveDeleteDialog(entry: RomEntry) {
         MaterialAlertDialogBuilder(this)
             .setMessage(resources.getQuantityString(R.plurals.delete_save_confirmation, 1, 1))
@@ -568,6 +512,7 @@ class MainActivity : BaseActivity() {
         }?.forEach { save ->
             save.delete()
         }
+        showRoms()
     }
 
     private fun selectImportFiles() {
@@ -788,6 +733,7 @@ class MainActivity : BaseActivity() {
             } else {
                 importDir.delete()
             }
+            runOnUiThread { showRoms() }
         }.start()
     }
 

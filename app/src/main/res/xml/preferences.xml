@@ -3,53 +3,53 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <Preference
-        app:key="behaviour"
-        app:title="@string/settings_category_behaviour"
-        app:summary="@string/settings_category_behaviour_summary"
+        app:key="controls"
+        app:title="@string/settings_category_controls"
+        app:summary="@string/settings_category_controls_summary"
         app:icon="@drawable/ic_gamepad_24dp">
         <intent
             android:targetPackage="@string/application_id"
-            android:targetClass="com.philj56.gbcc.BehaviourSettingsActivity" />
+            android:targetClass="com.philj56.gbcc.ControlsSettingsActivity" />
     </Preference>
 
     <Preference
-        app:key="graphics"
-        app:title="@string/settings_category_graphics"
-        app:summary="@string/settings_category_graphics_summary"
+        app:key="image"
+        app:title="@string/settings_category_image"
+        app:summary="@string/settings_category_image_summary"
         app:icon="@drawable/ic_image_24dp">
         <intent
             android:targetPackage="@string/application_id"
-            android:targetClass="com.philj56.gbcc.GraphicsSettingsActivity" />
+            android:targetClass="com.philj56.gbcc.ImageSettingsActivity" />
     </Preference>
 
     <Preference
-        app:key="display"
-        app:title="@string/settings_category_display"
-        app:summary="@string/settings_category_display_summary"
-        app:icon="@drawable/ic_smartphone_24dp">
-        <intent
-            android:targetPackage="@string/application_id"
-            android:targetClass="com.philj56.gbcc.DisplaySettingsActivity" />
-    </Preference>
-
-    <Preference
-        app:key="audio"
-        app:title="@string/settings_category_audio"
-        app:summary="@string/settings_category_audio_summary"
+        app:key="sound"
+        app:title="@string/settings_category_sound"
+        app:summary="@string/settings_category_sound_summary"
         app:icon="@drawable/ic_music_note_24dp">
         <intent
             android:targetPackage="@string/application_id"
-            android:targetClass="com.philj56.gbcc.AudioSettingsActivity" />
+            android:targetClass="com.philj56.gbcc.SoundSettingsActivity" />
     </Preference>
 
     <Preference
-        app:key="miscellaneous"
-        app:title="@string/settings_category_miscellaneous"
-        app:summary="@string/settings_category_miscellaneous_summary"
+        app:key="advanced"
+        app:title="@string/settings_category_advanced"
+        app:summary="@string/settings_category_advanced_summary"
         app:icon="@drawable/ic_cogs_24dp">
         <intent
             android:targetPackage="@string/application_id"
-            android:targetClass="com.philj56.gbcc.MiscellaneousSettingsActivity" />
+            android:targetClass="com.philj56.gbcc.AdvancedSettingsActivity" />
+    </Preference>
+
+    <Preference
+        app:key="about"
+        app:title="@string/settings_category_about"
+        app:summary="@string/settings_category_about_summary"
+        app:icon="@drawable/ic_information_24dp">
+        <intent
+            android:targetPackage="@string/application_id"
+            android:targetClass="com.philj56.gbcc.AboutSettingsActivity" />
     </Preference>
 
     <PreferenceCategory

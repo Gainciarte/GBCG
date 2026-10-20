@@ -65,25 +65,25 @@
 			android:parentActivityName="MainActivity"
             android:label="@string/settings_title"/>
 
-		<activity android:name=".AudioSettingsActivity"
+		<activity android:name=".ControlsSettingsActivity"
 			android:parentActivityName="SettingsActivity"
-			android:label="@string/settings_category_audio" />
+			android:label="@string/settings_category_controls" />
 
-		<activity android:name=".BehaviourSettingsActivity"
+		<activity android:name=".ImageSettingsActivity"
 			android:parentActivityName="SettingsActivity"
-			android:label="@string/settings_category_behaviour" />
+			android:label="@string/settings_category_image" />
 
-		<activity android:name=".DisplaySettingsActivity"
+		<activity android:name=".SoundSettingsActivity"
 			android:parentActivityName="SettingsActivity"
-			android:label="@string/settings_category_display" />
+			android:label="@string/settings_category_sound" />
 
-		<activity android:name=".GraphicsSettingsActivity"
+		<activity android:name=".AdvancedSettingsActivity"
 			android:parentActivityName="SettingsActivity"
-			android:label="@string/settings_category_graphics" />
+			android:label="@string/settings_category_advanced" />
 
-		<activity android:name=".MiscellaneousSettingsActivity"
+		<activity android:name=".AboutSettingsActivity"
 			android:parentActivityName="SettingsActivity"
-			android:label="@string/settings_category_miscellaneous" />
+			android:label="@string/settings_category_about" />
 
 		<activity android:name=".ArrangeActivity"
 			android:parentActivityName=".SettingsActivity"

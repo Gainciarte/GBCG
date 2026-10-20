@@ -16,6 +16,8 @@ import java.io.File
 
 class RomConfigActivity : BaseActivity() {
     lateinit var configFile: File
+    // The ROM's file name, to open its cheats
+    lateinit var romFileName: String
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Make sure we initialise configFile before calling anything else,
@@ -23,7 +25,8 @@ class RomConfigActivity : BaseActivity() {
         val configDir = filesDir.resolve("config")
         configDir.mkdirs()
         val bundle = intent.extras
-        val filename = File(bundle?.getString("file") ?: "").nameWithoutExtension
+        romFileName = File(bundle?.getString("file") ?: "").name
+        val filename = File(romFileName).nameWithoutExtension
         configFile = configDir.resolve("$filename.cfg")
 
         super.onCreate(savedInstanceState)

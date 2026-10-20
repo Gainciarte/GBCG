@@ -2,6 +2,13 @@
 <PreferenceScreen
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <!-- Opens the game's cheats -->
+    <Preference
+        app:iconSpaceReserved="false"
+        app:key="cheats"
+        app:title="@string/cheat_title"
+        app:summary="@string/cheats_summary" />
+
     <SwitchPreferenceCompat
         app:widgetLayout="@layout/preference_widget_material_switch"
         app:defaultValue="true"

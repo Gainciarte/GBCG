@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:title="@string/settings_group_onscreen">
+
+        <Preference
+            app:key="arrange"
+            app:title="@string/settings_arrange"
+            app:iconSpaceReserved="false">
+            <intent
+                android:targetPackage="@string/application_id"
+                android:targetClass="com.philj56.gbcc.ArrangeActivity" />
+        </Preference>
+
+        <SwitchPreferenceCompat
+            app:widgetLayout="@layout/preference_widget_material_switch"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false"
+            app:key="grid_snap"
+            app:title="@string/settings_grid_snap" />
+
+        <SwitchPreferenceCompat
+            app:widgetLayout="@layout/preference_widget_material_switch"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false"
+            app:key="animate_buttons"
+            app:title="@string/settings_animate_buttons" />
+
+        <SwitchPreferenceCompat
+            app:widgetLayout="@layout/preference_widget_material_switch"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false"
+            app:key="show_turbo"
+            app:title="@string/settings_turbo_toggle" />
+
+        <SwitchPreferenceCompat
+            app:widgetLayout="@layout/preference_widget_material_switch"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false"
+            app:key="dpad_turbo"
+            app:title="@string/settings_turbo_dpad"
+            app:summary="@string/settings_turbo_dpad_summary" />
+
+        <com.philj56.gbcc.settings.SummaryListPreference
+            app:defaultValue="-1"
+            app:entries="@array/orientation_names_array"
+            app:entryValues="@array/orientation_values_array"
+            app:key="orientation"
+            app:title="@string/settings_orientation"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:title="@string/settings_group_vibration">
+
+        <SwitchPreferenceCompat
+            app:widgetLayout="@layout/preference_widget_material_switch"
+            app:defaultValue="true"
+            app:iconSpaceReserved="false"
+            app:key="haptic_key_press"
+            app:title="@string/settings_haptic_key_press" />
+
+        <SwitchPreferenceCompat
+            app:widgetLayout="@layout/preference_widget_material_switch"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false"
+            app:key="haptic_key_release"
+            app:title="@string/settings_haptic_key_release" />
+
+        <com.philj56.gbcc.materialPreferences.MaterialSeekbarPreference
+            android:layout="@layout/preference_widget_slider"
+            app:defaultValue="255"
+            app:min="1"
+            android:max="255"
+            app:iconSpaceReserved="false"
+            app:key="rumble_strength"
+            app:title="@string/settings_rumble_strength" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:title="@string/settings_group_turbo_gamepad">
+
+        <com.philj56.gbcc.settings.TurboPreference
+            app:defaultValue="0"
+            app:iconSpaceReserved="false"
+            app:key="turbo_speed"
+            app:title="@string/settings_turbo_speed" />
+
+        <Preference
+            app:key="remap"
+            app:title="@string/settings_remap"
+            app:iconSpaceReserved="false">
+            <intent
+                android:targetPackage="@string/application_id"
+                android:targetClass="com.philj56.gbcc.RemapActivity" />
+        </Preference>
+
+        <Preference
+            app:key="advanced_remap"
+            app:title="@string/settings_additional_mappings"
+            app:summary="@string/settings_additional_mappings_summary"
+            app:iconSpaceReserved="false">
+            <intent
+                android:targetPackage="@string/application_id"
+                android:targetClass="com.philj56.gbcc.AdditionalMappingsActivity" />
+        </Preference>
+    </PreferenceCategory>
+
+</PreferenceScreen>

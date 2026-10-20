@@ -23,11 +23,24 @@ El fork recién empieza. Por ahora, lo distinto del original es:
   juegos. Las partidas siguen dentro de GBCG, asociadas al nombre de cada juego.
   Mientras un juego está abierto, GBCG usa una copia temporal en su caché (el
   núcleo abre las ROM por ruta) que se borra al cerrarlo.
-- **Menú más simple:** cada juego tiene un botón ⋮ (o mantener presionado) con
-  renombrar, borrar partida, acceso directo, trucos y configuración. Se quitaron
-  la selección múltiple, mover, crear carpetas y "Multiplayer", que no funcionaba;
-  "Importar" ahora importa solo partidas (`.sav`, estados y `.zip` de partidas).
-  Ya no se incluye la ROM tutorial de GBCC.
+- **Grupos:** arriba de la lista, "All games", "GBC" y "GB" (se arman solos según
+  la extensión de cada ROM) y los grupos que crees ("+ New group"; mantener
+  presionado un grupo para renombrarlo o borrarlo). Los juegos jugados aparecen
+  primero, del más reciente al más antiguo, y los que tienen partida llevan un
+  ícono.
+- **Menú más simple:** la barra superior deja a la vista solo Ajustes; elegir
+  carpeta, importar y exportar partidas están en su menú ⋮. Cada juego tiene un
+  botón ⋮ (o mantener presionado) con grupos, opciones del juego (configuración y
+  trucos), borrar partida y acceso directo. Se quitaron la selección múltiple,
+  mover, renombrar, crear carpetas y "Multiplayer", que no funcionaba; "Importar"
+  ahora importa solo partidas (`.sav`, estados y `.zip` de partidas). Ya no se
+  incluye la ROM tutorial de GBCC.
+- **Ajustes reorganizados:** Controls, Picture, Sound, Advanced y About (versión,
+  código fuente y licencias), en vez de las cinco categorías originales.
+- **Menú de pausa:** al tocar la pantalla del juego (o el botón de menú de un
+  mando) el juego se pausa y aparece un menú de Android: continuar, guardar y
+  cargar estado (9 ranuras, con la fecha de cada una), turbo, opciones del juego,
+  reiniciar y salir. Reemplaza al menú que dibujaba el núcleo.
 - **Android 16 (API 36):** la app apunta a la versión que exige Google Play desde
   agosto de 2026, con herramientas al día (Android Gradle Plugin 8.13, Gradle 8.14,
   Kotlin 2.2), el núcleo compilado con el NDK r28 (alineado a páginas de 16 KB) y

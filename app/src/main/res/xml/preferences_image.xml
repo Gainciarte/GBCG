@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:title="@string/settings_group_game">
+
+        <com.philj56.gbcc.settings.SummaryListPreference
+            app:defaultValue="Subpixel"
+            app:entries="@array/shader_names_array"
+            app:entryValues="@array/shader_values_array"
+            app:key="shader_gbc"
+            app:title="@string/settings_shader_gbc"
+            app:iconSpaceReserved="false" />
+
+        <com.philj56.gbcc.settings.SummaryListPreference
+            app:defaultValue="Dot Matrix"
+            app:entries="@array/shader_names_array"
+            app:entryValues="@array/shader_values_array"
+            app:key="shader_dmg"
+            app:title="@string/settings_shader_dmg"
+            app:iconSpaceReserved="false" />
+
+        <com.philj56.gbcc.settings.SummaryListPreference
+            app:defaultValue="Default"
+            app:entries="@array/dmg_palettes_array"
+            app:entryValues="@array/dmg_palettes_array"
+            app:key="palette"
+            app:title="@string/settings_palette"
+            app:iconSpaceReserved="false" />
+
+        <com.philj56.gbcc.settings.SummaryListPreference
+            app:defaultValue="auto"
+            app:entries="@array/skin_names_array"
+            app:entryValues="@array/skin_values_array"
+            app:key="skin"
+            app:title="@string/settings_skin"
+            app:iconSpaceReserved="false" />
+
+        <com.philj56.gbcc.settings.SummaryListPreference
+            app:defaultValue="Teal"
+            app:entries="@array/color_names_array"
+            app:entryValues="@array/color_values_array"
+            app:key="color"
+            app:title="@string/settings_color"
+            app:iconSpaceReserved="false" />
+
+        <com.philj56.gbcc.settings.SummaryListPreference
+            app:defaultValue="Light"
+            app:entries="@array/dmg_color_names_array"
+            app:entryValues="@array/dmg_color_values_array"
+            app:key="dmg_color"
+            app:title="@string/settings_dmg_color"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:iconSpaceReserved="false"
+        app:title="@string/settings_group_app">
+
+        <com.philj56.gbcc.settings.SummaryListPreference
+            app:defaultValue="Teal"
+            app:entries="@array/color_names_array"
+            app:entryValues="@array/color_values_array"
+            app:key="theme"
+            app:title="@string/settings_theme"
+            app:iconSpaceReserved="false" />
+
+        <com.philj56.gbcc.settings.SummaryListPreference
+            app:defaultValue="auto"
+            app:entries="@array/night_mode_names_array"
+            app:entryValues="@array/night_mode_values_array"
+            app:key="night_mode"
+            app:title="@string/settings_night_mode"
+            app:iconSpaceReserved="false" />
+
+        <SwitchPreferenceCompat
+            app:widgetLayout="@layout/preference_widget_material_switch"
+            app:defaultValue="false"
+            app:key="oled_night_mode"
+            app:title="@string/settings_oled_night_mode"
+            app:summary="@string/settings_oled_night_mode_summary"
+            app:iconSpaceReserved="false" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

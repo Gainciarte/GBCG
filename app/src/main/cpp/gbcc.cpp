@@ -384,6 +384,16 @@ Java_com_philj56_gbcc_GLActivity_quit(
 	options = (struct gbcc_temp_options){0}; //NOLINT
 }
 
+// Pauses or resumes emulation (the app's pause menu). Save and load state requests are
+// only carried out while running, so they happen right after resuming.
+extern "C" JNIEXPORT void JNICALL
+Java_com_philj56_gbcc_GLActivity_setPaused(
+		JNIEnv *,
+		jobject /* this */,
+		jboolean paused) {
+	gbc.pause = paused;
+}
+
 extern "C" JNIEXPORT void JNICALL
 Java_com_philj56_gbcc_GLActivity_toggleMenu(
 		JNIEnv *,

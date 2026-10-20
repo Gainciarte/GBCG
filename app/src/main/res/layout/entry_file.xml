@@ -31,6 +31,18 @@
             android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="@color/file_entry_text" />
 
+        <!-- Shown when the game has a save -->
+        <ImageView
+            android:id="@+id/fileSaveIcon"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="0"
+            android:contentDescription="@string/has_save"
+            android:visibility="gone"
+            app:srcCompat="@drawable/ic_save_24dp"
+            app:tint="@color/file_entry_text" />
+
         <!-- Opens the same actions as a long press -->
         <ImageButton
             android:id="@+id/fileMore"
