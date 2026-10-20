@@ -28,6 +28,16 @@ class FileAdapter(
             }
         }
 
+    /** Names the user gave to games, by file name (see RomTitles). */
+    var titles: Map<String, String> = emptyMap()
+        @SuppressLint("NotifyDataSetChanged")
+        set(value) {
+            if (value != field) {
+                field = value
+                notifyDataSetChanged()
+            }
+        }
+
     class FileViewHolder(itemView: View, private val adapter: FileAdapter, val onClick: (RomEntry) -> Unit, val onShowActions: (RomEntry) -> Unit) :
         RecyclerView.ViewHolder(itemView) {
         private val textView = itemView.findViewById<TextView>(R.id.fileEntry)
@@ -54,7 +64,7 @@ class FileAdapter(
             currentEntry = entry
             imageView.setImageResource(if (entry.isGbc) R.drawable.ic_file_gbc else R.drawable.ic_file_dmg)
             saveIcon.visibility = if (entry.baseName in adapter.gamesWithSaves) View.VISIBLE else View.GONE
-            textView.text = entry.baseName
+            textView.text = adapter.titles[entry.name] ?: entry.baseName
         }
     }
 

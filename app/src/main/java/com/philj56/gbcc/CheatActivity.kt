@@ -60,12 +60,14 @@ class CheatActivity : BaseActivity() {
         }
     }
 
-    override fun onDestroy() {
+    // Saved whenever the screen is left, so nothing is lost if Android closes the app later
+    override fun onPause() {
         saveFile()
-        super.onDestroy()
+        super.onPause()
     }
 
     fun clearConfig() {
+        cheats.clear()
         configFile.delete()
         finish()
     }
@@ -109,13 +111,21 @@ class CheatActivity : BaseActivity() {
         }
     }
 
+    // Lines look like "cheat=CODE#Description", with a leading "#" if the cheat is off.
+    // Anything else (a blank or edited line) is skipped instead of closing the screen.
     private fun loadFile() {
-        configFile.forEachLine { line ->
-            val active = !line.startsWith("#")
-            val (_, code, description) =
-                if (!active) { line.substring(1) } else { line }
-                    .split("=", "#")
-            cheats.add(Cheat(description, code, active))
+        configFile.forEachLine { raw ->
+            val active = !raw.startsWith("#")
+            val line = if (active) raw else raw.substring(1)
+            if (!line.startsWith("cheat=")) {
+                return@forEachLine
+            }
+            val rest = line.removePrefix("cheat=")
+            val code = rest.substringBefore('#').trim()
+            val description = rest.substringAfter('#', "")
+            if (code.isNotEmpty()) {
+                cheats.add(Cheat(description, code, active))
+            }
         }
     }
 }

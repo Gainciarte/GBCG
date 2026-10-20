@@ -11,6 +11,13 @@
         app:maxButtonHeight="?attr/actionBarSize"
         app:showAsAction="never" />
 
+    <!-- Only shown after deleting the GBC or GB group -->
+    <item
+        android:id="@+id/restoreGroupsItem"
+        android:title="@string/restore_default_groups"
+        android:visible="false"
+        app:showAsAction="never" />
+
     <item
         android:id="@+id/importItem"
         android:icon="@drawable/ic_library_add_24dp"

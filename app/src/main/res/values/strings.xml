@@ -17,6 +17,8 @@
     <string name="group_name_hint">Group name</string>
     <string name="rename_group">Rename group</string>
     <string name="delete_group">Delete group</string>
+    <string name="delete_default_group_confirmation">Delete the group \"<xliff:g>%1$s</xliff:g>\"? The games stay in your folder and in All games. You can bring the group back from the ⋮ menu.</string>
+    <string name="restore_default_groups">Restore GBC and GB groups</string>
     <string name="delete_group_confirmation">Delete the group \"<xliff:g>%1$s</xliff:g>\"? The games stay in your folder.</string>
     <string name="group_exists">There\'s already a group called \"<xliff:g>%1$s</xliff:g>\"</string>
     <string name="group_empty">There are no games in this group yet. Add them from each game\'s ⋮ menu.</string>
@@ -34,6 +36,8 @@
     </plurals>
     <string name="delete_config_confirmation">Are you sure you wish to delete your config for this game?</string>
     <string name="game_options">Game options</string>
+    <string name="rename_game">Rename</string>
+    <string name="game_name_hint">Name shown in GBCG (the file keeps its name)</string>
     <string name="pause_resume">Resume</string>
     <string name="pause_save_state">Save state</string>
     <string name="pause_load_state">Load state</string>

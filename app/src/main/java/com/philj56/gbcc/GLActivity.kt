@@ -59,6 +59,7 @@ import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.philj56.gbcc.databinding.ActivityGlBinding
 import com.philj56.gbcc.main.RomHistory
+import com.philj56.gbcc.main.RomTitles
 import java.io.File
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -216,7 +217,6 @@ class GLActivity : BaseActivity(), SensorEventListener {
         rowStride: Int
     )
     private external fun initialiseTileset(width: Int, height: Int, data: ByteArray)
-    private external fun destroyTileset()
     private external fun setCameraImage(data: ByteArray)
     private external fun hasRumble(): Boolean
     private external fun hasAccelerometer(): Boolean
@@ -849,7 +849,6 @@ class GLActivity : BaseActivity(), SensorEventListener {
     }
 
     override fun onDestroy() {
-        destroyTileset()
         if (::printerAudio.isInitialized) {
             printerAudio.release()
         }
@@ -1190,7 +1189,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
         var keepPaused = false
         showImmersiveDialog(
             MaterialAlertDialogBuilder(this)
-                .setTitle(File(filename).nameWithoutExtension)
+                .setTitle(RomTitles.title(this, File(filename).name))
                 .setItems(items) { _, which ->
                     when (which) {
                         1 -> { keepPaused = true; showStateSlots(save = true) }

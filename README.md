@@ -25,14 +25,17 @@ El fork recién empieza. Por ahora, lo distinto del original es:
   núcleo abre las ROM por ruta) que se borra al cerrarlo.
 - **Grupos:** arriba de la lista, "All games", "GBC" y "GB" (se arman solos según
   la extensión de cada ROM) y los grupos que crees ("+ New group"; mantener
-  presionado un grupo para renombrarlo o borrarlo). Los juegos jugados aparecen
+  presionado un grupo para renombrarlo o borrarlo). GBC y GB también se pueden
+  borrar, y se recuperan desde el menú ⋮ de arriba. Los juegos jugados aparecen
   primero, del más reciente al más antiguo, y los que tienen partida llevan un
   ícono.
 - **Menú más simple:** la barra superior deja a la vista solo Ajustes; elegir
   carpeta, importar y exportar partidas están en su menú ⋮. Cada juego tiene un
-  botón ⋮ (o mantener presionado) con grupos, opciones del juego (configuración y
-  trucos), borrar partida y acceso directo. Se quitaron la selección múltiple,
-  mover, renombrar, crear carpetas y "Multiplayer", que no funcionaba; "Importar"
+  botón ⋮ (o mantener presionado) con grupos, renombrar, opciones del juego
+  (configuración y trucos), borrar partida y acceso directo. Renombrar cambia solo
+  el nombre que muestra GBCG: el archivo de la ROM no cambia, así que sus partidas
+  y los otros emuladores que usan la carpeta no se ven afectados. Se quitaron la
+  selección múltiple, mover, crear carpetas y "Multiplayer", que no funcionaba; "Importar"
   ahora importa solo partidas (`.sav`, estados y `.zip` de partidas). Ya no se
   incluye la ROM tutorial de GBCC.
 - **Ajustes reorganizados:** Controls, Picture, Sound, Advanced y About (versión,

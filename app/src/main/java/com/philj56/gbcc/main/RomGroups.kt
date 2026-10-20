@@ -9,6 +9,7 @@ import org.json.JSONObject
 
 private const val PREF_GROUPS = "rom_groups"
 private const val PREF_SELECTED = "rom_group_selected"
+private const val PREF_HIDDEN = "rom_groups_hidden"
 
 /** A group the user made. Games are kept by file name, like their saves. */
 data class RomGroup(val name: String, val roms: MutableSet<String> = mutableSetOf())
@@ -48,6 +49,22 @@ object RomGroups {
         }
         PreferenceManager.getDefaultSharedPreferences(context).edit {
             putString(PREF_GROUPS, array.toString())
+        }
+    }
+
+    /** The automatic groups (GBC, GB) the user deleted; "all games" can't be deleted. */
+    fun hidden(context: Context): Set<String> =
+        PreferenceManager.getDefaultSharedPreferences(context).getStringSet(PREF_HIDDEN, null) ?: emptySet()
+
+    fun hide(context: Context, key: String) {
+        PreferenceManager.getDefaultSharedPreferences(context).edit {
+            putStringSet(PREF_HIDDEN, hidden(context) + key)
+        }
+    }
+
+    fun restoreHidden(context: Context) {
+        PreferenceManager.getDefaultSharedPreferences(context).edit {
+            remove(PREF_HIDDEN)
         }
     }
 

@@ -729,6 +729,12 @@ Java_com_philj56_gbcc_GLActivity_initialiseTileset(
 		jint width,
 		jint height,
 		jbyteArray data) {
+	// The font is the same for every game, so it's loaded once and kept for the life of
+	// the process. Freeing it when a game closed could free it under the next game, as
+	// the old game's onDestroy can run after the new one's onCreate.
+	if (fontmap.bitmap != nullptr) {
+		return;
+	}
 	fontmap.bitmap = static_cast<uint8_t *>(calloc(width * height, 1));
 	fontmap.tile_width = width / 16;
 	fontmap.tile_height = height / 16;
@@ -742,14 +748,6 @@ Java_com_philj56_gbcc_GLActivity_initialiseTileset(
 		}
 	}
 	env->ReleaseByteArrayElements(data, image, JNI_ABORT);
-}
-
-extern "C" JNIEXPORT void JNICALL
-Java_com_philj56_gbcc_GLActivity_destroyTileset(
-		JNIEnv *,
-		jobject /* this */) {
-	free(fontmap.bitmap);
-	fontmap.bitmap = nullptr;
 }
 
 extern "C" JNIEXPORT void JNICALL

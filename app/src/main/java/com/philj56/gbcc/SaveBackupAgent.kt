@@ -16,6 +16,7 @@ import android.app.backup.BackupDataOutput
 import android.app.backup.FullBackupDataOutput
 import android.os.ParcelFileDescriptor
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
@@ -81,12 +82,21 @@ class SaveBackupAgent : BackupAgent() {
                 TYPE_DIRECTORY -> destination.mkdirs()
                 TYPE_FILE -> {
                     destination.parentFile?.mkdirs()
+                    // The restore stream carries every file in turn, so it must not be
+                    // closed here, and exactly `size` bytes belong to this file (a single
+                    // read() can return fewer)
+                    val input = FileInputStream(data.fileDescriptor)
                     destination.outputStream().use { output ->
-                        val buffer = ByteArray(size.toInt())
-                        ParcelFileDescriptor.AutoCloseInputStream(data).use {
-                            it.read(buffer, 0, size.toInt())
+                        val buffer = ByteArray(32 * 1024)
+                        var remaining = size
+                        while (remaining > 0) {
+                            val count = input.read(buffer, 0, minOf(buffer.size.toLong(), remaining).toInt())
+                            if (count <= 0) {
+                                break
+                            }
+                            output.write(buffer, 0, count)
+                            remaining -= count
                         }
-                        output.write(buffer)
                     }
                 }
             }
@@ -99,7 +109,8 @@ class SaveBackupAgent : BackupAgent() {
 
                         var entry = zip.nextEntry
                         while (entry != null) {
-                            val file = saveDir.resolve(entry.name)
+                            // Only the file name, so an entry can't point outside the folder
+                            val file = saveDir.resolve(File(entry.name).name)
                             file.outputStream().use { zip.copyTo(it) }
                             zip.closeEntry()
                             entry = zip.nextEntry

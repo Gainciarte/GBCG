@@ -53,6 +53,7 @@ import java.util.zip.ZipOutputStream
 private const val BACK_DELAY: Int = 2000
 private const val SAVE_DIR: String = "saves"
 const val IMPORTED_SAVE_SUBDIR: String = "imported"
+private const val REQUEST_RENAME = "rename"
 private const val REQUEST_NEW_GROUP = "newGroup"
 private const val REQUEST_RENAME_GROUP = "renameGroup"
 
@@ -126,6 +127,14 @@ class MainActivity : BaseActivity() {
             showRoms()
         }
 
+        supportFragmentManager.setFragmentResultListener(REQUEST_RENAME, this) { _, result ->
+            val romName = result.getString(EditTextDialogFragment.RESULT_PATH)
+            val title = result.getString(EditTextDialogFragment.RESULT_TEXT)
+            if (romName != null && title != null) {
+                RomTitles.set(this, romName, title)
+                showRoms()
+            }
+        }
         supportFragmentManager.setFragmentResultListener(REQUEST_NEW_GROUP, this) { _, result ->
             val name = result.getString(EditTextDialogFragment.RESULT_TEXT)?.trim()
             // When created from a game's menu, the game goes in the new group
@@ -215,10 +224,12 @@ class MainActivity : BaseActivity() {
         if (roms == null) {
             return
         }
+        val hidden = RomGroups.hidden(this)
+        binding.mainToolbar.menu.findItem(R.id.restoreGroupsItem)?.isVisible = hidden.isNotEmpty()
         val chips = ArrayList<Pair<String, String>>()
         chips.add(RomGroups.ALL to getString(R.string.group_all))
-        if (roms.any { it.isGbc }) chips.add(RomGroups.GBC to getString(R.string.group_gbc))
-        if (roms.any { !it.isGbc }) chips.add(RomGroups.GB to getString(R.string.group_gb))
+        if (RomGroups.GBC !in hidden && roms.any { it.isGbc }) chips.add(RomGroups.GBC to getString(R.string.group_gbc))
+        if (RomGroups.GB !in hidden && roms.any { !it.isGbc }) chips.add(RomGroups.GB to getString(R.string.group_gb))
         groups.forEach { chips.add(RomGroups.customKey(it.name) to it.name) }
         if (chips.none { it.first == selectedGroup }) {
             // The group was deleted, or its games are gone
@@ -232,9 +243,16 @@ class MainActivity : BaseActivity() {
             chip.id = View.generateViewId()
             chip.tag = key
             chip.text = label
-            RomGroups.customName(key)?.let { name ->
+            val customName = RomGroups.customName(key)
+            if (customName != null) {
                 chip.setOnLongClickListener {
-                    showGroupActionsDialog(name)
+                    showGroupActionsDialog(customName)
+                    true
+                }
+            } else if (key != RomGroups.ALL) {
+                // GBC and GB can be deleted (hidden) too, and brought back from the menu
+                chip.setOnLongClickListener {
+                    showDefaultGroupActionsDialog(key, label)
                     true
                 }
             }
@@ -265,10 +283,14 @@ class MainActivity : BaseActivity() {
                 showEmptyState(R.string.rom_folder_empty, true)
             }
             else -> {
+                // Alphabetical by the name shown, then the games played most recently first
+                val titles = RomTitles.all(this)
                 val shown = RomHistory.sortRecentFirst(
-                    RomGroups.filter(selectedGroup, roms, groups) ?: roms,
+                    (RomGroups.filter(selectedGroup, roms, groups) ?: roms)
+                        .sortedBy { (titles[it.name] ?: it.baseName).lowercase() },
                     RomHistory.lastPlayed(this)
                 )
+                fileAdapter.titles = titles
                 fileAdapter.gamesWithSaves = filesDir.resolve(SAVE_DIR)
                     .list { _, name -> name.endsWith(".sav") }
                     ?.map { it.removeSuffix(".sav") }?.toSet() ?: emptySet()
@@ -298,6 +320,11 @@ class MainActivity : BaseActivity() {
     private fun onMenuItemClick(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.chooseFolderItem -> selectRomFolder()
+            R.id.restoreGroupsItem -> {
+                RomGroups.restoreHidden(this)
+                updateGroupChips()
+                showRoms()
+            }
             R.id.importItem -> selectImportFiles()
             R.id.exportItem -> selectExportDir()
             R.id.settingsItem -> startActivity(Intent(this, SettingsActivity::class.java))
@@ -361,6 +388,23 @@ class MainActivity : BaseActivity() {
             .show()
     }
 
+    private fun showDefaultGroupActionsDialog(key: String, label: String) {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(label)
+            .setItems(arrayOf(getString(R.string.delete_group))) { _, _ ->
+                MaterialAlertDialogBuilder(this)
+                    .setMessage(getString(R.string.delete_default_group_confirmation, label))
+                    .setPositiveButton(R.string.delete) { _, _ ->
+                        RomGroups.hide(this, key)
+                        updateGroupChips()
+                        showRoms()
+                    }
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show()
+            }
+            .show()
+    }
+
     private fun renameGroup(oldName: String, newName: String) {
         if (oldName == newName) {
             return
@@ -399,7 +443,7 @@ class MainActivity : BaseActivity() {
         val names = groups.map { it.name }.toTypedArray()
         val checked = groups.map { entry.name in it.roms }.toBooleanArray()
         MaterialAlertDialogBuilder(this)
-            .setTitle(entry.baseName)
+            .setTitle(RomTitles.title(this, entry.name))
             .setMultiChoiceItems(names, checked) { _, which, isChecked -> checked[which] = isChecked }
             .setPositiveButton(android.R.string.ok) { _, _ ->
                 groups.forEachIndexed { i, group ->
@@ -427,6 +471,17 @@ class MainActivity : BaseActivity() {
 
         binding.buttonGroups.setOnClickListener {
             showRomGroupsDialog(entry)
+            dialog.dismiss()
+        }
+        binding.buttonRenameRom.setOnClickListener {
+            // Only the name shown in GBCG changes: the ROM file keeps its name
+            EditTextDialogFragment.newInstance(
+                R.string.rename_game,
+                RomTitles.title(this, entry.name),
+                REQUEST_RENAME,
+                entry.name,
+                R.string.game_name_hint
+            ).show(supportFragmentManager, "")
             dialog.dismiss()
         }
         binding.buttonDeleteSave.setOnClickListener {
@@ -474,8 +529,8 @@ class MainActivity : BaseActivity() {
                 IconCompat.createWithResource(this, iconResource)
             }
         val shortcut = ShortcutInfoCompat.Builder(this, "launch_${entry.documentId}")
-            .setShortLabel(entry.baseName)
-            .setLongLabel(entry.baseName)
+            .setShortLabel(RomTitles.title(this, entry.name))
+            .setLongLabel(RomTitles.title(this, entry.name))
             .setIcon(icon)
             .setIntents(
                 arrayOf(

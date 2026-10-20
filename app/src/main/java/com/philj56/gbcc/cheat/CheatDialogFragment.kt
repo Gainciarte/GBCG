@@ -69,7 +69,8 @@ class CheatDialogFragment : DialogFragment() {
         val dialog = builder.create()
 
         dialog.setOnShowListener {
-            dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = false
+            // Editing an existing cheat starts with both fields filled in
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).isEnabled = descriptionFilled && codeFilled
         }
 
         binding.cheatDescriptionInput.filters = arrayOf(InputFilter { source, start, end, _, _, _ ->
