@@ -3,25 +3,20 @@
     <string name="launch_game_intent">io.github.gainciarte.gbcg.launch_game</string>
 
     <!-- MainActivity -->
-    <string name="base_directory_name">Files</string>
-    <string name="import_rom">Import</string>
     <string name="settings">Settings</string>
-    <string name="create_folder">Create folder</string>
+    <string name="choose_rom_folder">Choose ROM folder</string>
+    <string name="rom_folder_prompt">Choose the folder where you keep your ROMs. GBCG opens them from there and keeps the list up to date.</string>
+    <string name="rom_folder_empty">There are no ROMs (.gb or .gbc) in this folder.</string>
+    <string name="rom_folder_lost">GBCG can no longer open the ROM folder. Choose it again.</string>
+    <string name="import_saves">Import saves</string>
+    <string name="message_import_not_save">\"<xliff:g>%1$s</xliff:g>\" is not a save. To add games, copy them to your ROM folder.</string>
+    <string name="message_failed_rename">Couldn\'t rename <xliff:g>%1$s</xliff:g></string>
+    <string name="message_failed_open_rom">Couldn\'t open <xliff:g>%1$s</xliff:g></string>
     <string name="create_folder_hint">Folder name</string>
     <string name="export_saves">Export saves</string>
-    <string name="multiplayer">Multiplayer</string>
-    <string name="searching">Searching…</string>
-    <string name="manage_files">Manage files</string>
-    <string name="rename_directory">Rename directory</string>
     <string name="rename_rom">Rename ROM</string>
-    <string name="select_items">Select files</string>
-    <string name="select_destination">Select destination</string>
     <string name="more_options">More options</string>
     <string name="delete">Delete</string>
-    <plurals name="delete_confirmation">
-        <item quantity="one">Are you sure you wish to delete this item?</item>
-        <item quantity="other">Are you sure you wish to delete these %d items?</item>
-    </plurals>
     <string name="select_action">Select action</string>
     <string name="delete_save">Delete save</string>
     <plurals name="delete_save_confirmation">
@@ -32,7 +27,6 @@
     <string name="edit_config">Edit game config</string>
     <string name="edit_cheats">Edit cheats</string>
     <string name="add_shortcut">Add shortcut</string>
-    <string name="move">Move</string>
     <string name="overwrite_confirmation">Select save files to overwrite:</string>
     <string name="error_zip_title">Error parsing zip file: <xliff:g>%1$s</xliff:g></string>
     <string name="error_zip_body">This could be caused by trying to import a zip file with an encoding other than UTF-8. If possible, recreate the zip with UTF-8 encoding.</string>
@@ -244,7 +238,6 @@
         <item quantity="other">Exported %d items</item>
     </plurals>
     <string name="message_failed_name">Failed to retrieve file name</string>
-    <string name="message_failed_create_folder">Failed to create folder <xliff:g>%1$s</xliff:g></string>
     <string name="message_failed_camera">Failed to open camera: <xliff:g>%1$s</xliff:g></string>
     <string name="message_repeat_back">Press BACK again to exit</string>
 </resources>

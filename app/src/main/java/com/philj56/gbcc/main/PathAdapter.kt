@@ -9,42 +9,38 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.philj56.gbcc.R
-import java.io.File
 
-class PathAdapter(private val onClick: (File) -> Unit) :
-    ListAdapter<File, PathAdapter.PathViewHolder>(PathDiffCallback) {
+class PathAdapter(private val onClick: (PathEntry) -> Unit) :
+    ListAdapter<PathEntry, PathAdapter.PathViewHolder>(PathDiffCallback) {
 
-    class PathViewHolder(itemView: View, private val adapter: PathAdapter, val onClick: (File) -> Unit) :
+    class PathViewHolder(itemView: View, private val adapter: PathAdapter, val onClick: (PathEntry) -> Unit) :
         RecyclerView.ViewHolder(itemView) {
         private val button = itemView.findViewById<Button>(R.id.pathButton)
-        private var currentFile: File? = null
+        private var currentEntry: PathEntry? = null
 
         init {
             button.setOnClickListener {
-                currentFile?.let {
+                currentEntry?.let {
                     onClick(it)
                 }
             }
         }
 
         @SuppressLint("SetTextI18n")
-        fun bind(file: File) {
-            currentFile = file
-            button.isActivated = (file == adapter.getItem(adapter.itemCount - 1))
-            if (file.name == "") {
-                button.text = itemView.context.getString(R.string.base_directory_name)
-            } else {
-                button.text = "/  ${file.name}"
-            }
+        fun bind(entry: PathEntry, position: Int) {
+            currentEntry = entry
+            button.isActivated = (position == adapter.itemCount - 1)
+            // The first entry is the ROM folder itself
+            button.text = if (position == 0) entry.name else "/  ${entry.name}"
         }
     }
 
-    private object PathDiffCallback : DiffUtil.ItemCallback<File>() {
-        override fun areItemsTheSame(oldItem: File, newItem: File): Boolean {
-            return oldItem.path == newItem.path
+    private object PathDiffCallback : DiffUtil.ItemCallback<PathEntry>() {
+        override fun areItemsTheSame(oldItem: PathEntry, newItem: PathEntry): Boolean {
+            return oldItem.documentId == newItem.documentId
         }
 
-        override fun areContentsTheSame(oldItem: File, newItem: File): Boolean {
+        override fun areContentsTheSame(oldItem: PathEntry, newItem: PathEntry): Boolean {
             return oldItem == newItem
         }
     }
@@ -56,6 +52,6 @@ class PathAdapter(private val onClick: (File) -> Unit) :
     }
 
     override fun onBindViewHolder(holder: PathViewHolder, position: Int) {
-        holder.bind(getItem(position))
+        holder.bind(getItem(position), position)
     }
 }

@@ -10,69 +10,55 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.philj56.gbcc.R
-import java.io.File
 
 class FileAdapter(
-    private val onClick: (File, View) -> Unit,
-    private val onLongClick: (File, View) -> Unit
+    private val onClick: (RomEntry) -> Unit,
+    private val onShowActions: (RomEntry) -> Unit
 ) :
-    ListAdapter<File, FileAdapter.FileViewHolder>(FileDiffCallback) {
+    ListAdapter<RomEntry, FileAdapter.FileViewHolder>(FileDiffCallback) {
 
-    val selected = HashSet<File>()
-
-    class FileViewHolder(itemView: View, private val adapter: FileAdapter, val onClick: (File, View) -> Unit, val onLongClick: (File, View) -> Unit) :
+    class FileViewHolder(itemView: View, val onClick: (RomEntry) -> Unit, val onShowActions: (RomEntry) -> Unit) :
         RecyclerView.ViewHolder(itemView) {
         private val textView = itemView.findViewById<TextView>(R.id.fileEntry)
         private val imageView = itemView.findViewById<ImageView>(R.id.fileIcon)
-        private var currentFile: File? = null
+        private val moreButton = itemView.findViewById<ImageButton>(R.id.fileMore)
+        private var currentEntry: RomEntry? = null
 
         init {
             itemView.setOnClickListener {
-                currentFile?.let {
-                    onClick(it, itemView)
-                }
+                currentEntry?.let { onClick(it) }
             }
             itemView.setOnLongClickListener {
-                currentFile?.let {
-                    onLongClick(it, itemView)
-                }
+                currentEntry?.takeUnless { it.isDirectory }?.let { onShowActions(it) }
                 return@setOnLongClickListener true
             }
             // The ⋮ button opens the same actions as a long press
-            itemView.findViewById<ImageButton>(R.id.fileMore).setOnClickListener {
-                currentFile?.let {
-                    onLongClick(it, itemView)
-                }
+            moreButton.setOnClickListener {
+                currentEntry?.let { onShowActions(it) }
             }
         }
 
-        fun bind(file: File) {
-            currentFile = file
-            itemView.isActivated = file in adapter.selected
-            when (file.extension.lowercase()) {
-                "gbc" -> {
-                    imageView.setImageResource(R.drawable.ic_file_gbc)
-                    imageView.clearColorFilter()
+        fun bind(entry: RomEntry) {
+            currentEntry = entry
+            imageView.setImageResource(
+                when {
+                    entry.isDirectory -> R.drawable.ic_folder_34dp
+                    entry.extension.equals("gbc", ignoreCase = true) -> R.drawable.ic_file_gbc
+                    else -> R.drawable.ic_file_dmg
                 }
-                "gb" -> {
-                    imageView.setImageResource(R.drawable.ic_file_dmg)
-                    imageView.clearColorFilter()
-                }
-                else -> {
-                    imageView.setImageResource(R.drawable.ic_folder_34dp)
-                }
-            }
-
-            textView.text = file.nameWithoutExtension
+            )
+            // Folders have no actions
+            moreButton.visibility = if (entry.isDirectory) View.INVISIBLE else View.VISIBLE
+            textView.text = entry.baseName
         }
     }
 
-    private object FileDiffCallback : DiffUtil.ItemCallback<File>() {
-        override fun areItemsTheSame(oldItem: File, newItem: File): Boolean {
-            return oldItem == newItem
+    private object FileDiffCallback : DiffUtil.ItemCallback<RomEntry>() {
+        override fun areItemsTheSame(oldItem: RomEntry, newItem: RomEntry): Boolean {
+            return oldItem.documentId == newItem.documentId
         }
 
-        override fun areContentsTheSame(oldItem: File, newItem: File): Boolean {
+        override fun areContentsTheSame(oldItem: RomEntry, newItem: RomEntry): Boolean {
             return oldItem == newItem
         }
     }
@@ -80,7 +66,7 @@ class FileAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): FileViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.entry_file, parent, false)
-        return FileViewHolder(view, this, onClick, onLongClick)
+        return FileViewHolder(view, onClick, onShowActions)
     }
 
     override fun onBindViewHolder(holder: FileViewHolder, position: Int) {

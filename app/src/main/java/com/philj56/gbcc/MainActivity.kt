@@ -18,13 +18,11 @@ import android.graphics.drawable.AdaptiveIconDrawable
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.DocumentsContract
 import android.provider.OpenableColumns
-import android.util.Log
 import android.util.TypedValue
 import android.view.MenuItem
 import android.view.View
-import android.view.animation.AccelerateDecelerateInterpolator
-import android.widget.Button
 import android.widget.Toast
 import androidx.activity.addCallback
 import androidx.activity.result.contract.ActivityResultContracts
@@ -32,14 +30,11 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.pm.ShortcutInfoCompat
 import androidx.core.content.pm.ShortcutManagerCompat
 import androidx.core.graphics.drawable.IconCompat
-import androidx.core.view.forEach
 import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.Lifecycle
 import androidx.preference.PreferenceManager
-import androidx.transition.TransitionManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
-import com.philj56.gbcc.animations.CircularReveal
 import com.philj56.gbcc.databinding.ActivityMainBinding
-import com.philj56.gbcc.databinding.DialogDirectoryActionsBinding
 import com.philj56.gbcc.databinding.DialogRomActionsBinding
 import com.philj56.gbcc.main.*
 import java.io.File
@@ -57,41 +52,38 @@ import java.util.zip.ZipOutputStream
 private const val BACK_DELAY: Int = 2000
 private const val SAVE_DIR: String = "saves"
 const val IMPORTED_SAVE_SUBDIR: String = "imported"
-private const val REQUEST_CREATE_FOLDER = "createFolder"
 private const val REQUEST_RENAME = "rename"
+private const val STATE_PATH_NAMES = "pathNames"
+private const val STATE_PATH_IDS = "pathIds"
 
-// Extensions are matched ignoring case, so that e.g. "Tetris.GB" is listed too
-private val ROM_REGEX = Regex(".*\\.gbc?", RegexOption.IGNORE_CASE)
-private val IMPORTABLE_REGEX = Regex(".*\\.(gbc?|sav|s[0-9])", RegexOption.IGNORE_CASE)
+// Only saves are imported: the games stay in the ROM folder
+private val IMPORTABLE_REGEX = Regex(".*\\.(sav|s[0-9])", RegexOption.IGNORE_CASE)
 private val SAVE_EXTENSION_REGEX = Regex("sav|s[0-9]+", RegexOption.IGNORE_CASE)
 
 class MainActivity : BaseActivity() {
 
-    private enum class SelectionMode {
-        NORMAL, MOVE, DELETE, SELECT
-    }
-
-    private var selectionMode = SelectionMode.NORMAL
-    private val moveSelection = mutableListOf<File>()
-    private lateinit var files: ArrayList<File>
-    private lateinit var currentDir: File
-    private lateinit var baseDir: File
     private lateinit var binding: ActivityMainBinding
+    private lateinit var watcher: RomFolderWatcher
+    private var treeUri: Uri? = null
+    // From the ROM folder down to the folder being shown
+    private val pathStack = ArrayList<PathEntry>()
 
     private var timeBackPressed: Long = 0
 
     private val fileAdapter = FileAdapter(
-        onClick = { file, view -> onListItemClick(file, view) },
-        onLongClick = { file, view -> onListItemLongClick(file, view) }
+        onClick = { entry -> onEntryClick(entry) },
+        onShowActions = { entry -> showRomActionsDialog(entry) }
     )
     private val pathAdapter = PathAdapter(
-        onClick = { file -> onPathItemClick(file) }
+        onClick = { entry -> onPathItemClick(entry) }
     )
 
-    private val toolbarTransition = CircularReveal()
-        .setDuration(300)
-        .setInterpolator(AccelerateDecelerateInterpolator())
-
+    private val chooseFolder = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        if (uri != null) {
+            RomFolder.choose(this, uri)
+            openRomFolder(null)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         PreferenceManager.setDefaultValues(this, R.xml.preferences, true)
@@ -110,43 +102,32 @@ class MainActivity : BaseActivity() {
         )
         super.onCreate(savedInstanceState)
         onBackPressedDispatcher.addCallback { backPress() }
-        baseDir = getExternalFilesDir(null) ?: filesDir
-        currentDir = baseDir
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Set up the toolbars
         binding.mainToolbar.setOnMenuItemClickListener { item -> onMenuItemClick(item) }
-        binding.fileToolbar.setOnMenuItemClickListener { item -> onMenuItemClick(item) }
-        binding.fileToolbar.setNavigationOnClickListener { clearSelection() }
-        binding.moveToolbar.setOnMenuItemClickListener { item -> onMenuItemClick(item) }
-        binding.moveToolbar.setNavigationOnClickListener { clearSelection() }
-
-        toolbarTransition.addTarget(binding.mainAppBarLayout)
-        toolbarTransition.addTarget(binding.fileAppBarLayout)
-        toolbarTransition.addTarget(binding.moveAppBarLayout)
+        binding.chooseFolderButton.setOnClickListener { selectRomFolder() }
 
         binding.fileList.adapter = fileAdapter
         binding.fileList.itemAnimator = null
         binding.path.adapter = pathAdapter
         binding.path.itemAnimator = null
-        changeDir(baseDir)
-        updateFiles()
 
-        supportFragmentManager.setFragmentResultListener(REQUEST_CREATE_FOLDER, this) { _, result ->
-            result.getString(EditTextDialogFragment.RESULT_TEXT)?.let { createFolder(it) }
-        }
+        watcher = RomFolderWatcher(this) { entries -> showEntries(entries) }
+
         supportFragmentManager.setFragmentResultListener(REQUEST_RENAME, this) { _, result ->
-            val path = result.getString(EditTextDialogFragment.RESULT_PATH)
+            val documentId = result.getString(EditTextDialogFragment.RESULT_PATH)
             val name = result.getString(EditTextDialogFragment.RESULT_TEXT)
-            if (path != null && name != null) {
-                renameFile(File(path), name)
+            if (documentId != null && name != null) {
+                renameRom(documentId, name)
             }
         }
-        supportFragmentManager.setFragmentResultListener(
-            EditTextDialogFragment.dismissKey(REQUEST_RENAME),
-            this
-        ) { _, _ -> clearSelection() }
+
+        if (savedInstanceState == null) {
+            // No game is open, so any ROM left in the cache is stale
+            GLActivity.clearRomCache(this)
+        }
+        openRomFolder(savedInstanceState)
 
         // Check if the version has changed since last launch, and perform some setup if so
         Thread {
@@ -168,13 +149,24 @@ class MainActivity : BaseActivity() {
         }.start()
     }
 
+    override fun onStart() {
+        super.onStart()
+        // Picks up any change made to the folder while the app was in the background,
+        // and keeps watching it while it's visible
+        watchCurrentFolder()
+    }
+
+    override fun onStop() {
+        watcher.stop()
+        super.onStop()
+    }
+
     override fun onPause() {
         supportFragmentManager.fragments.forEach {
             if (it is DialogFragment) {
                 it.dismissAllowingStateLoss()
             }
         }
-        clearSelection()
         super.onPause()
     }
 
@@ -183,379 +175,262 @@ class MainActivity : BaseActivity() {
         delegate.applyDayNight()
     }
 
-    override fun onContentChanged() {
-        super.onContentChanged()
-        updateFiles()
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putStringArrayList(STATE_PATH_NAMES, ArrayList(pathStack.map { it.name }))
+        outState.putStringArrayList(STATE_PATH_IDS, ArrayList(pathStack.map { it.documentId }))
     }
 
-    private fun beginSelection() {
-        TransitionManager.beginDelayedTransition(binding.mainLayout, toolbarTransition)
-        binding.fileAppBarLayout.visibility = View.VISIBLE
-        binding.mainAppBarLayout.visibility = View.INVISIBLE
-    }
-
-    private fun clearSelection() {
-        selectionMode = SelectionMode.NORMAL
-        if (fileAdapter.selected.isNotEmpty()) {
-            fileAdapter.selected.clear()
-            binding.fileList.forEach { view ->
-                view.isActivated = false
-                view.invalidateDrawable(view.background)
-            }
+    /** Shows the chosen ROM folder, at the subfolder saved in state if there is one. */
+    private fun openRomFolder(state: Bundle?) {
+        val tree = RomFolder.treeUri(this)
+        treeUri = tree
+        pathStack.clear()
+        if (tree == null) {
+            fileAdapter.submitList(emptyList())
+            showEmptyState(R.string.rom_folder_prompt, true)
+            updatePath()
+            return
         }
-        moveSelection.clear()
-        binding.mainAppBarLayout.visibility = View.VISIBLE
-        binding.fileAppBarLayout.visibility = View.INVISIBLE
-        binding.moveAppBarLayout.visibility = View.INVISIBLE
-    }
-
-    private fun updateFiles() {
-        val unsorted = currentDir.listFiles { file ->
-            file.name.matches(ROM_REGEX) or file.isDirectory
-        }
-        files = unsorted?.sortedWith(
-            compareBy(
-                { !it.isDirectory },
-                { it.name.lowercase() }
-            )
-        )?.toCollection(ArrayList()) ?: ArrayList()
-        fileAdapter.submitList(files)
-    }
-
-    private fun toggleSelection(file: File) {
-        if (file in fileAdapter.selected) {
-            fileAdapter.selected.remove(file)
-            if (fileAdapter.selected.isEmpty()) {
-                TransitionManager.beginDelayedTransition(
-                    binding.mainLayout,
-                    toolbarTransition
-                )
-                clearSelection()
-            }
+        val names = state?.getStringArrayList(STATE_PATH_NAMES)
+        val ids = state?.getStringArrayList(STATE_PATH_IDS)
+        if (names != null && ids != null && names.isNotEmpty() && names.size == ids.size) {
+            names.zip(ids).forEach { (name, id) -> pathStack.add(PathEntry(name, id)) }
         } else {
-            fileAdapter.selected.add(file)
+            pathStack.add(RomFolder.root(this, tree))
+        }
+        updatePath()
+        if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED)) {
+            watchCurrentFolder()
         }
     }
 
-    private fun onPathItemClick(dir: File) {
-        changeDir(baseDir.resolve(dir))
+    private fun watchCurrentFolder() {
+        val tree = treeUri ?: return
+        val current = pathStack.lastOrNull() ?: return
+        watcher.watch(tree, current.documentId)
     }
 
-    private fun onListItemClick(file: File, view: View) {
-        when (selectionMode) {
-            SelectionMode.DELETE -> {
-            }
-            SelectionMode.MOVE -> {
-                if (file.isDirectory) {
-                    currentDir = file
-                    updateFiles()
-                }
-            }
-            SelectionMode.NORMAL -> {
-                if (file.isDirectory) {
-                    changeDir(file)
-                } else {
-                    switchToGL(file.toString())
-                }
-            }
-            SelectionMode.SELECT -> {
-                if (file.isDirectory) {
-                    changeDir(file)
-                } else {
-                    toggleSelection(file)
-                    view.isActivated = file in fileAdapter.selected
-                    view.invalidateDrawable(view.background)
-                }
-            }
+    private fun showEntries(entries: List<RomEntry>?) {
+        if (entries == null) {
+            // The folder can't be read any more (deleted, or the permission was revoked)
+            fileAdapter.submitList(emptyList())
+            showEmptyState(R.string.rom_folder_lost, true)
+            return
+        }
+        fileAdapter.submitList(entries)
+        if (entries.isEmpty()) {
+            showEmptyState(R.string.rom_folder_empty, pathStack.size <= 1)
+        } else {
+            binding.emptyState.visibility = View.GONE
+            binding.fileList.visibility = View.VISIBLE
         }
     }
 
-    private fun onListItemLongClick(file: File, view: View) {
-        when (selectionMode) {
-            SelectionMode.SELECT -> {
-               if (file.isDirectory) {
-                   toggleSelection(file)
-                   view.isActivated = file in fileAdapter.selected
-                   view.invalidateDrawable(view.background)
-               }
-            }
-            else -> {
-                if (fileAdapter.selected.isEmpty()) {
-                    selectionMode = SelectionMode.SELECT
-                    fileAdapter.selected.add(file)
-                    view.isActivated = true
-                    view.invalidateDrawable(view.background)
+    private fun showEmptyState(text: Int, showButton: Boolean) {
+        binding.emptyText.setText(text)
+        binding.chooseFolderButton.visibility = if (showButton) View.VISIBLE else View.GONE
+        binding.emptyState.visibility = View.VISIBLE
+        binding.fileList.visibility = View.GONE
+    }
 
-                    if (file.isDirectory) {
-                        showDirectoryActionsDialog(file)
-                    } else {
-                        showRomActionsDialog(file)
-                    }
-                }
-            }
+    private fun updatePath() {
+        binding.path.visibility = if (pathStack.isEmpty()) View.GONE else View.VISIBLE
+        pathAdapter.submitList(ArrayList(pathStack)) {
+            // Rebind every entry, so only the last one shows as the current folder
+            pathAdapter.notifyItemRangeChanged(0, pathAdapter.itemCount)
+            binding.path.scrollToPosition(pathAdapter.itemCount - 1)
         }
+    }
+
+    private fun onEntryClick(entry: RomEntry) {
+        if (entry.isDirectory) {
+            pathStack.add(PathEntry(entry.name, entry.documentId))
+            updatePath()
+            watchCurrentFolder()
+        } else {
+            val tree = treeUri ?: return
+            startActivity(GLActivity.intent(this, RomFolder.documentUri(tree, entry.documentId), entry.name))
+        }
+    }
+
+    private fun onPathItemClick(entry: PathEntry) {
+        val index = pathStack.indexOfFirst { it.documentId == entry.documentId }
+        if (index < 0 || index == pathStack.size - 1) {
+            return
+        }
+        while (pathStack.size > index + 1) {
+            pathStack.removeAt(pathStack.size - 1)
+        }
+        updatePath()
+        watchCurrentFolder()
     }
 
     private fun onMenuItemClick(item: MenuItem): Boolean {
         when (item.itemId) {
+            R.id.chooseFolderItem -> selectRomFolder()
             R.id.importItem -> selectImportFiles()
-            R.id.settingsItem -> startActivity(Intent(this, SettingsActivity::class.java))
-            R.id.folderItem -> {
-                EditTextDialogFragment.newInstance(R.string.create_folder, "", REQUEST_CREATE_FOLDER)
-                    .show(supportFragmentManager, "")
-            }
             R.id.exportItem -> selectExportDir()
-            R.id.deleteItem -> {
-                selectionMode = SelectionMode.DELETE
-                val count = fileAdapter.selected.count()
-                MaterialAlertDialogBuilder(this)
-                    .setMessage(resources.getQuantityString(R.plurals.delete_confirmation, count, count))
-                    .setPositiveButton(R.string.delete) { _, _ -> performDelete() }
-                    .setNegativeButton(android.R.string.cancel) { _, _ -> clearSelection() }
-                    .setOnCancelListener { clearSelection() }
-                    .show()
-            }
-            R.id.moveItem -> {
-                selectionMode = SelectionMode.MOVE
-                moveSelection.addAll(0, fileAdapter.selected)
-                binding.moveAppBarLayout.visibility = View.VISIBLE
-                binding.fileAppBarLayout.visibility = View.INVISIBLE
-                binding.mainAppBarLayout.visibility = View.INVISIBLE
-            }
-            R.id.confirmMoveItem -> {
-                Thread {
-                    moveSelection.forEach { file ->
-                        val newFile = File(currentDir, file.name)
-                        file.renameTo(newFile)
-                    }
-                    runOnUiThread {
-                        clearSelection()
-                        updateFiles()
-                    }
-                }.start()
-            }
+            R.id.settingsItem -> startActivity(Intent(this, SettingsActivity::class.java))
         }
         return true
     }
 
-    private fun switchToGL(filename: String) {
-        val intent = Intent(this, GLActivity::class.java).apply {
-            putExtra("file", filename)
-        }
-        startActivity(intent)
-    }
-
-    private fun changeDir(dir: File) {
-        currentDir = dir
-        val pathList = if (currentDir == baseDir) {
-            listOf(File(""))
-        } else {
-            currentDir
-                .relativeTo(baseDir)
-                .path
-                .split(File.separatorChar)
-                .runningFold(File("")) { a, b -> a.resolve(b) }
-        }
-        pathAdapter.submitList(pathList) {
-            val count = pathAdapter.itemCount - 1
-            for (index in 0..count) {
-                val viewHolder = binding.path.findViewHolderForAdapterPosition(index)
-                viewHolder?.itemView?.findViewById<Button>(R.id.pathButton)?.isActivated = (index == count)
-            }
-        }
-        updateFiles()
-    }
-
-    private fun createFolder(name: String) {
-        if (currentDir.resolve(name).mkdirs()) {
-            updateFiles()
-        } else {
+    private fun selectRomFolder() {
+        // Start the picker in the current folder, if there is one
+        val initial = treeUri?.let { RomFolder.documentUri(it, DocumentsContract.getTreeDocumentId(it)) }
+        try {
+            chooseFolder.launch(initial)
+        } catch (e: ActivityNotFoundException) {
             Toast.makeText(
                 baseContext,
-                getString(R.string.message_failed_create_folder, name),
+                getString(R.string.message_no_files_app),
                 Toast.LENGTH_SHORT
             ).show()
         }
     }
 
-    private fun performDelete() {
-        // The selection can include files from other directories than the one shown,
-        // so don't rely on their position in the current list
-        fileAdapter.selected.forEach { file ->
-            file.deleteRecursively()
-        }
-        clearSelection()
-        updateFiles()
-    }
-
-    private fun showDirectoryActionsDialog(file: File) {
-        val binding = DialogDirectoryActionsBinding.inflate(layoutInflater)
-        val dialog = MaterialAlertDialogBuilder(this)
-            .setView(binding.root)
-            .setOnCancelListener { clearSelection() }
-            .show()
-
-        binding.buttonSelectItems.setOnClickListener {
-            beginSelection()
-            dialog.dismiss()
-        }
-        binding.buttonRenameDirectory.setOnClickListener {
-            showRenameDialog(file)
-            dialog.dismiss()
-        }
-    }
-
-    private fun showRomActionsDialog(file: File) {
+    private fun showRomActionsDialog(entry: RomEntry) {
         val binding = DialogRomActionsBinding.inflate(layoutInflater)
         val dialog = MaterialAlertDialogBuilder(this)
             .setView(binding.root)
-            .setOnCancelListener { clearSelection() }
             .show()
 
-        binding.buttonMultiplayer.setOnClickListener {
-            MaterialAlertDialogBuilder(this)
-                .setView(R.layout.dialog_multiplayer_searching)
-                .setOnDismissListener { clearSelection() }
-                .show()
-            dialog.dismiss()
-        }
-        binding.buttonSelectItems.setOnClickListener {
-            beginSelection()
-            dialog.dismiss()
-        }
         binding.buttonRenameRom.setOnClickListener {
-            showRenameDialog(file)
+            EditTextDialogFragment.newInstance(
+                R.string.rename_rom,
+                entry.baseName,
+                REQUEST_RENAME,
+                entry.documentId
+            ).show(supportFragmentManager, "")
             dialog.dismiss()
         }
         binding.buttonDeleteSave.setOnClickListener {
-            showSaveDeleteDialog()
+            showSaveDeleteDialog(entry)
             dialog.dismiss()
         }
         binding.buttonEditCheats.setOnClickListener {
             val intent = Intent(this, CheatActivity::class.java).apply {
-                putExtra("file", file.name)
+                putExtra("file", entry.name)
             }
             startActivity(intent)
             dialog.dismiss()
         }
         binding.buttonEditConfig.setOnClickListener {
             val intent = Intent(this, RomConfigActivity::class.java).apply {
-                putExtra("file", file.name)
+                putExtra("file", entry.name)
             }
             startActivity(intent)
             dialog.dismiss()
         }
         binding.buttonAddShortcut.setOnClickListener {
-            if (!ShortcutManagerCompat.isRequestPinShortcutSupported(this)) {
-                return@setOnClickListener
-            }
-            val iconResource = if (file.extension.equals("gbc", ignoreCase = true)) {
-                R.drawable.ic_game_shortcut_gbc
-            } else {
-                R.drawable.ic_game_shortcut_dmg
-            }
-            val icon =
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    val iconSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 108f, resources.displayMetrics).toInt()
-                    val borderSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 18f, resources.displayMetrics).toInt()
-
-                    val drawable = AdaptiveIconDrawable(
-                        IconCompat.createWithResource(this, R.drawable.ic_launcher_background).loadDrawable(this),
-                        IconCompat.createWithResource(this, iconResource).loadDrawable(this),
-                    )
-                    drawable.setBounds(borderSize, borderSize, iconSize - borderSize, iconSize - borderSize)
-
-                    val bitmap = Bitmap.createBitmap(iconSize, iconSize, Bitmap.Config.ARGB_8888)
-                    drawable.draw(Canvas(bitmap))
-                    IconCompat.createWithAdaptiveBitmap(bitmap)
-                } else {
-                    IconCompat.createWithResource(this, iconResource)
-                }
-            val shortcut = ShortcutInfoCompat.Builder(this, "launch_${file.name}")
-                .setShortLabel(file.name)
-                .setLongLabel("Open ${file.name}")
-                .setIcon(icon)
-                .setIntents(
-                    arrayOf(
-                        /* Clear any existing activities, and launch the game */
-                        Intent(this, MainActivity::class.java).apply {
-                            action = Intent.ACTION_VIEW
-                            flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
-                        },
-                        Intent(this, GLActivity::class.java).apply {
-                            action = resources.getString(R.string.launch_game_intent)
-                            putExtra("file", file.toString())
-                        }
-                    )
-                )
-                .build()
-
-            ShortcutManagerCompat.requestPinShortcut(this, shortcut, null)
+            addShortcut(entry)
         }
     }
 
-    private fun showRenameDialog(file: File) {
-        selectionMode = SelectionMode.NORMAL
-        EditTextDialogFragment.newInstance(
-            R.string.rename_rom,
-            file.nameWithoutExtension,
-            REQUEST_RENAME,
-            file.path
-        ).show(supportFragmentManager, "")
-    }
-
-    private fun renameFile(file: File, name: String) {
-        if (file.isDirectory) {
-            file.renameTo(File("${file.parent}/$name"))
-            updateFiles()
+    private fun addShortcut(entry: RomEntry) {
+        val tree = treeUri ?: return
+        if (!ShortcutManagerCompat.isRequestPinShortcutSupported(this)) {
             return
         }
-        val configFile = filesDir.resolve("config/${file.nameWithoutExtension}.cfg")
-        val cheatFile = filesDir.resolve("config/${file.nameWithoutExtension}.cheats")
-        val savFile = filesDir.resolve("saves/${file.nameWithoutExtension}.sav")
-        if (configFile.exists()) {
-            configFile.renameTo(filesDir.resolve("config/$name.cfg"))
+        val iconResource = if (entry.extension.equals("gbc", ignoreCase = true)) {
+            R.drawable.ic_game_shortcut_gbc
+        } else {
+            R.drawable.ic_game_shortcut_dmg
         }
-        if (cheatFile.exists()) {
-            cheatFile.renameTo(filesDir.resolve("config/$name.cheats"))
-        }
-        if (savFile.exists()) {
-            savFile.renameTo(filesDir.resolve("saves/$name.sav"))
-        }
-        for (n in 0..10) {
-            val state = filesDir.resolve("saves/${file.nameWithoutExtension}.s$n")
-            if (state.exists()) {
-                state.renameTo(filesDir.resolve("saves/$name.s$n"))
+        val icon =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val iconSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 108f, resources.displayMetrics).toInt()
+                val borderSize = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 18f, resources.displayMetrics).toInt()
+
+                val drawable = AdaptiveIconDrawable(
+                    IconCompat.createWithResource(this, R.drawable.ic_launcher_background).loadDrawable(this),
+                    IconCompat.createWithResource(this, iconResource).loadDrawable(this),
+                )
+                drawable.setBounds(borderSize, borderSize, iconSize - borderSize, iconSize - borderSize)
+
+                val bitmap = Bitmap.createBitmap(iconSize, iconSize, Bitmap.Config.ARGB_8888)
+                drawable.draw(Canvas(bitmap))
+                IconCompat.createWithAdaptiveBitmap(bitmap)
+            } else {
+                IconCompat.createWithResource(this, iconResource)
             }
-        }
-        file.renameTo(File("${file.parent}/$name.${file.extension}"))
-        updateFiles()
+        val shortcut = ShortcutInfoCompat.Builder(this, "launch_${entry.documentId}")
+            .setShortLabel(entry.baseName)
+            .setLongLabel(entry.baseName)
+            .setIcon(icon)
+            .setIntents(
+                arrayOf(
+                    /* Clear any existing activities, and launch the game */
+                    Intent(this, MainActivity::class.java).apply {
+                        action = Intent.ACTION_VIEW
+                        flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+                    },
+                    GLActivity.intent(this, RomFolder.documentUri(tree, entry.documentId), entry.name).apply {
+                        action = resources.getString(R.string.launch_game_intent)
+                    }
+                )
+            )
+            .build()
+
+        ShortcutManagerCompat.requestPinShortcut(this, shortcut, null)
     }
 
-    private fun showSaveDeleteDialog() {
-        selectionMode = SelectionMode.DELETE
-        val count = fileAdapter.selected.count()
+    private fun renameRom(documentId: String, newBaseName: String) {
+        val tree = treeUri ?: return
+        val entry = fileAdapter.currentList.firstOrNull { it.documentId == documentId } ?: return
+        val newName = if (entry.extension.isEmpty()) newBaseName else "$newBaseName.${entry.extension}"
+        val renamed = try {
+            DocumentsContract.renameDocument(contentResolver, RomFolder.documentUri(tree, documentId), newName)
+        } catch (e: Exception) {
+            // A file with that name already exists, or there's no write access to the folder
+            null
+        }
+        if (renamed == null) {
+            Toast.makeText(baseContext, getString(R.string.message_failed_rename, entry.name), Toast.LENGTH_SHORT).show()
+            return
+        }
+        // The saves, config and cheats follow the game's name
+        val oldBaseName = entry.baseName
+        val configFile = filesDir.resolve("config/$oldBaseName.cfg")
+        val cheatFile = filesDir.resolve("config/$oldBaseName.cheats")
+        val savFile = filesDir.resolve("saves/$oldBaseName.sav")
+        if (configFile.exists()) {
+            configFile.renameTo(filesDir.resolve("config/$newBaseName.cfg"))
+        }
+        if (cheatFile.exists()) {
+            cheatFile.renameTo(filesDir.resolve("config/$newBaseName.cheats"))
+        }
+        if (savFile.exists()) {
+            savFile.renameTo(filesDir.resolve("saves/$newBaseName.sav"))
+        }
+        for (n in 0..10) {
+            val state = filesDir.resolve("saves/$oldBaseName.s$n")
+            if (state.exists()) {
+                state.renameTo(filesDir.resolve("saves/$newBaseName.s$n"))
+            }
+        }
+        watcher.reload()
+    }
+
+    private fun showSaveDeleteDialog(entry: RomEntry) {
         MaterialAlertDialogBuilder(this)
-            .setMessage(resources.getQuantityString(R.plurals.delete_save_confirmation, count, count))
-            .setPositiveButton(R.string.delete) { _, _ -> performSaveDelete() }
-            .setNegativeButton(android.R.string.cancel) { _, _ -> clearSelection() }
-            .setOnCancelListener { clearSelection() }
+            .setMessage(resources.getQuantityString(R.plurals.delete_save_confirmation, 1, 1))
+            .setPositiveButton(R.string.delete) { _, _ -> performSaveDelete(entry.baseName) }
+            .setNegativeButton(android.R.string.cancel) { _, _ -> }
             .show()
     }
 
-    private fun performSaveDelete() {
+    private fun performSaveDelete(baseName: String) {
         val saveDir = filesDir.resolve(SAVE_DIR)
-        fileAdapter.selected.forEach { file ->
-            // Only this game's battery save and save states: a prefix match would also
-            // delete the saves of e.g. "Game 2" when deleting those of "Game"
-            val saveRegex = Regex(Regex.escape(file.nameWithoutExtension) + "\\.(sav|s[0-9]+)")
-            saveDir.listFiles { _, name ->
-                name.matches(saveRegex)
-            }?.forEach { save ->
-                save.delete()
-            }
+        // Only this game's battery save and save states: a prefix match would also
+        // delete the saves of e.g. "Game 2" when deleting those of "Game"
+        val saveRegex = Regex(Regex.escape(baseName) + "\\.(sav|s[0-9]+)")
+        saveDir.listFiles { _, name ->
+            name.matches(saveRegex)
+        }?.forEach { save ->
+            save.delete()
         }
-        clearSelection()
     }
 
     private fun selectImportFiles() {
@@ -593,15 +468,7 @@ class MainActivity : BaseActivity() {
             if (!cursor.moveToFirst()) {
                 return@use null
             }
-
-            val name = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
-            val ret = cursor.getString(name)
-
-            while (cursor.moveToNext()) {
-                Log.i("GBCC", cursor.getString(name))
-            }
-
-            return ret
+            cursor.getString(cursor.getColumnIndexOrThrow(OpenableColumns.DISPLAY_NAME))
         }
     }
 
@@ -609,17 +476,8 @@ class MainActivity : BaseActivity() {
         fun doCopy(input: InputStream, entryName: String) {
             // The core only looks for lowercase save extensions (".sav", ".s0"...)
             val extension = File(entryName).extension
-            val name = if (extension.matches(SAVE_EXTENSION_REGEX)) {
-                entryName.dropLast(extension.length) + extension.lowercase()
-            } else {
-                entryName
-            }
-            val dir = if (name.endsWith(".sav")) {
-                filesDir.resolve(SAVE_DIR).resolve(IMPORTED_SAVE_SUBDIR)
-            } else {
-                currentDir
-            }
-            val file = dir.resolve(name)
+            val name = entryName.dropLast(extension.length) + extension.lowercase()
+            val file = filesDir.resolve(SAVE_DIR).resolve(IMPORTED_SAVE_SUBDIR).resolve(File(name).name)
             file.parentFile?.mkdirs()
             file.outputStream().use { output ->
                 input.copyTo(output)
@@ -736,8 +594,8 @@ class MainActivity : BaseActivity() {
                 runOnUiThread {
                     Toast.makeText(
                         baseContext,
-                        getString(R.string.message_failed_import, name),
-                        Toast.LENGTH_SHORT
+                        getString(R.string.message_import_not_save, name),
+                        Toast.LENGTH_LONG
                     ).show()
                 }
             }
@@ -765,9 +623,6 @@ class MainActivity : BaseActivity() {
                 }
             }
             resultData.forEach { importFile(it) }
-
-            // updateFiles needs to be run on the main thread, however
-            runOnUiThread { updateFiles() }
 
             // Go through the imported saves and prompt to overwrite if they already exist
             val existing = ArrayList<File>()
@@ -807,7 +662,7 @@ class MainActivity : BaseActivity() {
             val saveDir = filesDir.resolve(SAVE_DIR)
             val saves = saveDir.listFiles { path -> path.extension == "sav" }
                 ?: return@Thread
-            contentResolver.openOutputStream(uri).use { outputStream ->
+            contentResolver.openOutputStream(uri)?.use { outputStream ->
                 ZipOutputStream(outputStream).use { zip ->
                     saves.forEach { file ->
                         zip.putNextEntry(ZipEntry(file.name))
@@ -831,8 +686,10 @@ class MainActivity : BaseActivity() {
     }
 
     private fun backPress() {
-        if (currentDir != baseDir) {
-            changeDir(currentDir.parentFile ?: baseDir)
+        if (pathStack.size > 1) {
+            pathStack.removeAt(pathStack.size - 1)
+            updatePath()
+            watchCurrentFolder()
             return
         }
 

@@ -17,8 +17,16 @@ El fork recién empieza. Por ahora, lo distinto del original es:
   pantalla, generado con [`sources/make_icon.py`](sources/make_icon.py)). Los
   colores de la carcasa usan nombres genéricos, y los archivos exportados se llaman
   `gbcg_saves_….zip` y `gbcg_printer_….png`.
-- **Lista de archivos:** cada ROM y carpeta tiene un botón ⋮ que abre sus opciones
-  (antes solo se abrían manteniendo presionado, lo que también sigue funcionando).
+- **Carpeta de ROM:** en vez de guardar sus propias copias, GBCG pide una vez la
+  carpeta donde tienes tus ROM (con el selector de Android) y las abre desde ahí,
+  con sus subcarpetas. La lista se actualiza sola si agregas, quitas o renombras
+  juegos. Las partidas siguen dentro de GBCG, asociadas al nombre de cada juego.
+  Mientras un juego está abierto, GBCG usa una copia temporal en su caché (el
+  núcleo abre las ROM por ruta) que se borra al cerrarlo.
+- **Menú más simple:** cada juego tiene un botón ⋮ (o mantener presionado) con
+  renombrar, borrar partida, acceso directo, trucos y configuración. Se quitaron
+  la selección múltiple, mover, crear carpetas y "Multiplayer", que no funcionaba;
+  "Importar" ahora importa solo partidas (`.sav`, estados y `.zip` de partidas).
   Ya no se incluye la ROM tutorial de GBCC.
 - **Android 16 (API 36):** la app apunta a la versión que exige Google Play desde
   agosto de 2026, con herramientas al día (Android Gradle Plugin 8.13, Gradle 8.14,

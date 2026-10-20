@@ -21,46 +21,6 @@
             android:layout_height="?attr/actionBarSize"
             app:title="@string/app_name"
             app:menu="@menu/main_menu" />
-
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/fileAppBarLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?attr/colorSurfaceVariant"
-        android:fitsSystemWindows="true"
-        android:visibility="invisible">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/fileToolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:navigationIcon="@drawable/ic_close_24dp"
-            app:title="@string/select_items"
-            app:menu="@menu/file_menu"
-            style="@style/Widget.GBCC.Toolbar.Variant" />
-
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/moveAppBarLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="?attr/colorSurfaceVariant"
-        android:fitsSystemWindows="true"
-        android:visibility="invisible">
-
-        <com.google.android.material.appbar.MaterialToolbar
-            android:id="@+id/moveToolbar"
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            app:titleTextColor="?attr/colorOnSurfaceVariant"
-            app:navigationIcon="@drawable/ic_close_24dp"
-            app:title="@string/select_destination"
-            app:menu="@menu/move_menu"
-            style="@style/Widget.GBCC.Toolbar.Variant" />
-
     </com.google.android.material.appbar.AppBarLayout>
 
     <LinearLayout
@@ -84,5 +44,33 @@
             android:layout_height="match_parent"
             android:scrollbars="vertical"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+        <!-- Shown when no ROM folder is chosen yet, or the chosen one has no ROMs -->
+        <LinearLayout
+            android:id="@+id/emptyState"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="32dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/emptyText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:text="@string/rom_folder_prompt"
+                android:textAppearance="?attr/textAppearanceBodyLarge" />
+
+            <Button
+                android:id="@+id/chooseFolderButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="@string/choose_rom_folder"
+                app:icon="@drawable/ic_folder_open_24dp" />
+        </LinearLayout>
     </LinearLayout>
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

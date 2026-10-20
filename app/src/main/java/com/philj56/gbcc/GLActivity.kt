@@ -48,6 +48,7 @@ import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
@@ -57,6 +58,7 @@ import androidx.preference.PreferenceManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.philj56.gbcc.databinding.ActivityGlBinding
 import java.io.File
+import java.io.IOException
 import java.nio.ByteBuffer
 import java.text.SimpleDateFormat
 import java.util.*
@@ -516,11 +518,11 @@ class GLActivity : BaseActivity(), SensorEventListener {
         val save = filesDir.resolve("saves")
         save.mkdirs()
         saveDir = save.absolutePath
-        val bundle = intent.extras
-        filename = bundle?.getString("file") ?: ""
+        filename = prepareRom(reuseCopy = savedInstanceState != null)
         if (filename == "") {
             Log.e("GBCC", "No rom provided.")
             finish()
+            return
         }
         if (!checkRom(filename)) {
             Toast.makeText(
@@ -840,7 +842,45 @@ class GLActivity : BaseActivity(), SensorEventListener {
             printerPaperTearSound.release()
         }
         executor.shutdown()
+        if (isFinishing && ::filename.isInitialized
+            && File(filename).parentFile == cacheDir.resolve(ROM_CACHE_DIR)) {
+            File(filename).delete()
+        }
         super.onDestroy()
+    }
+
+    /*
+     * Returns the path of the ROM to play. The core opens ROMs by path, but the ROM folder
+     * is only reachable through content URIs, so the game is copied to the cache while it's
+     * open, and deleted when the game is closed. The copy keeps the ROM's name, which the
+     * core also uses for its saves. On recreation (e.g. rotation) the copy is reused.
+     */
+    private fun prepareRom(reuseCopy: Boolean): String {
+        val extras = intent.extras ?: return ""
+        // A plain path, as given by shortcuts made before the ROM folder existed
+        extras.getString("file")?.let { return it }
+        val uri = extras.getString(EXTRA_ROM_URI)?.toUri() ?: return ""
+        val name = File(extras.getString(EXTRA_ROM_NAME) ?: return "").name
+        val file = cacheDir.resolve(ROM_CACHE_DIR).resolve(name)
+        if (reuseCopy && file.exists()) {
+            return file.absolutePath
+        }
+        val partial = File(file.path + ".part")
+        try {
+            file.parentFile?.mkdirs()
+            val input = contentResolver.openInputStream(uri) ?: throw IOException("No input stream")
+            input.use { partial.outputStream().use { output -> it.copyTo(output) } }
+            if (!partial.renameTo(file)) {
+                throw IOException("Can't rename $partial")
+            }
+        } catch (e: Exception) {
+            // The ROM was moved or deleted, or the folder permission was revoked
+            Log.e("GBCC", "Can't open $uri", e)
+            partial.delete()
+            Toast.makeText(this, getString(R.string.message_failed_open_rom, name), Toast.LENGTH_SHORT).show()
+            return ""
+        }
+        return file.absolutePath
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -1607,6 +1647,22 @@ class GLActivity : BaseActivity(), SensorEventListener {
     }
 
     companion object {
+        private const val EXTRA_ROM_URI = "romUri"
+        private const val EXTRA_ROM_NAME = "romName"
+        private const val ROM_CACHE_DIR = "rom"
+
+        /** Opens the ROM at a content URI from the ROM folder; name is its file name. */
+        fun intent(context: Context, uri: Uri, name: String): Intent =
+            Intent(context, GLActivity::class.java).apply {
+                putExtra(EXTRA_ROM_URI, uri.toString())
+                putExtra(EXTRA_ROM_NAME, name)
+            }
+
+        /** Deletes ROM copies left by games that didn't close normally. */
+        fun clearRomCache(context: Context) {
+            context.cacheDir.resolve(ROM_CACHE_DIR).deleteRecursively()
+        }
+
         init {
             System.loadLibrary("gbcc")
         }
