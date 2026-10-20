@@ -2,6 +2,15 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <!-- Not stored with the other settings: AppCompat keeps the app's language -->
+    <com.philj56.gbcc.settings.SummaryListPreference
+        app:entries="@array/language_names_array"
+        app:entryValues="@array/language_values_array"
+        app:icon="@drawable/ic_translate_24dp"
+        app:key="app_language"
+        app:persistent="false"
+        app:title="@string/settings_language" />
+
     <Preference
         app:key="controls"
         app:title="@string/settings_category_controls"

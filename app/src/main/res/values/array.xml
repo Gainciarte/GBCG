@@ -73,6 +73,45 @@
     </string-array>
 
 
+    <!-- Each language is named in itself, so anyone can find theirs -->
+    <string-array name="language_names_array">
+        <item>@string/settings_language_system</item>
+        <item>English</item>
+        <item>Español</item>
+        <item>Français</item>
+        <item>Deutsch</item>
+        <item>Italiano</item>
+        <item>Português (Brasil)</item>
+    </string-array>
+
+    <string-array name="language_values_array" translatable="false">
+        <item></item>
+        <item>en</item>
+        <item>es</item>
+        <item>fr</item>
+        <item>de</item>
+        <item>it</item>
+        <item>pt-BR</item>
+    </string-array>
+
+    <string-array name="dmg_palette_names_array">
+        <item>@string/palette_default</item>
+        <item>@string/palette_monochrome</item>
+        <item>@string/palette_brown</item>
+        <item>@string/palette_red</item>
+        <item>@string/palette_dark_brown</item>
+        <item>@string/palette_pastel</item>
+        <item>@string/palette_orange</item>
+        <item>@string/palette_yellow</item>
+        <item>@string/palette_blue</item>
+        <item>@string/palette_dark_blue</item>
+        <item>@string/palette_grey</item>
+        <item>@string/palette_green</item>
+        <item>@string/palette_dark_green</item>
+        <item>@string/palette_invert</item>
+    </string-array>
+
+    <!-- Values given to the core: not translated -->
     <string-array name="dmg_palettes_array">
         <item>Default</item>
 		<item>Monochrome</item>
@@ -118,7 +157,7 @@
     <string-array name="license_names_array">
         <item>GBCG</item>
         <item>AndroidX</item>
-        <item>GBCC (emulator core)</item>
+        <item>@string/license_gbcc_core</item>
         <item>Material Components for Android</item>
         <item>Material Design Icons</item>
     </string-array>

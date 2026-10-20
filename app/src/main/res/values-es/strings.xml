@@ -1,0 +1,288 @@
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- MainActivity -->
+    <string name="settings">Ajustes</string>
+    <string name="choose_rom_folder">Elegir carpeta de ROM</string>
+    <string name="rom_folder_prompt">Elige la carpeta donde guardas tus ROM. GBCG las abre desde ahí y mantiene la lista al día.</string>
+    <string name="rom_folder_empty">No hay ROM (.gb o .gbc) en esta carpeta.</string>
+    <string name="rom_folder_lost">GBCG ya no puede abrir la carpeta de ROM. Vuelve a elegirla.</string>
+    <string name="import_saves">Importar partidas</string>
+    <string name="group_all">Todos los juegos</string>
+    <string name="groups">Grupos</string>
+    <string name="new_group">Nuevo grupo</string>
+    <string name="group_name_hint">Nombre del grupo</string>
+    <string name="rename_group">Renombrar grupo</string>
+    <string name="delete_group">Borrar grupo</string>
+    <string name="delete_default_group_confirmation">¿Borrar el grupo \"<xliff:g>%1$s</xliff:g>\"? Los juegos siguen en tu carpeta y en Todos los juegos. Puedes recuperar el grupo desde el menú ⋮.</string>
+    <string name="restore_default_groups">Recuperar los grupos GBC y GB</string>
+    <string name="delete_group_confirmation">¿Borrar el grupo \"<xliff:g>%1$s</xliff:g>\"? Los juegos siguen en tu carpeta.</string>
+    <string name="group_exists">Ya hay un grupo llamado \"<xliff:g>%1$s</xliff:g>\"</string>
+    <string name="group_empty">Todavía no hay juegos en este grupo. Agrégalos desde el menú ⋮ de cada juego.</string>
+    <string name="message_import_not_save">\"<xliff:g>%1$s</xliff:g>\" no es una partida. Para agregar juegos, cópialos a tu carpeta de ROM.</string>
+    <string name="message_failed_open_rom">No se pudo abrir <xliff:g>%1$s</xliff:g></string>
+    <string name="create_folder_hint">Nombre de la carpeta</string>
+    <string name="export_saves">Exportar partidas</string>
+    <string name="more_options">Más opciones</string>
+    <string name="delete">Borrar</string>
+    <string name="delete_save">Borrar partida</string>
+    <plurals name="delete_save_confirmation">
+        <item quantity="one">¿Seguro que quieres borrar las partidas de este juego?</item>
+        <item quantity="other">¿Seguro que quieres borrar las partidas de estos %d juegos?</item>
+    </plurals>
+    <string name="delete_config_confirmation">¿Seguro que quieres borrar la configuración de este juego?</string>
+    <string name="game_options">Opciones del juego</string>
+    <string name="rename_game">Renombrar</string>
+    <string name="game_name_hint">Nombre en GBCG (el archivo conserva el suyo)</string>
+    <string name="pause_resume">Continuar</string>
+    <string name="pause_save_state">Guardar estado</string>
+    <string name="pause_load_state">Cargar estado</string>
+    <string name="pause_turbo_on">Activar turbo</string>
+    <string name="pause_turbo_off">Desactivar turbo</string>
+    <string name="pause_restart">Reiniciar juego</string>
+    <string name="pause_quit">Salir del juego</string>
+    <string name="state_slot_saved">Ranura <xliff:g>%1$d</xliff:g> · <xliff:g>%2$s</xliff:g></string>
+    <string name="state_slot_empty">Ranura <xliff:g>%1$d</xliff:g> · vacía</string>
+    <string name="has_save">Tiene partida</string>
+    <string name="add_shortcut">Agregar acceso directo</string>
+    <string name="overwrite_confirmation">Elige las partidas que quieres sobrescribir:</string>
+    <string name="error_zip_title">Error al leer el archivo zip: <xliff:g>%1$s</xliff:g></string>
+    <string name="error_zip_body">Puede deberse a que el zip usa una codificación distinta de UTF-8. Si puedes, vuelve a crearlo con codificación UTF-8.</string>
+
+    <!-- GLActivity -->
+    <string name="screen_description">Pantalla</string>
+    <string name="a_button_description">A</string>
+    <string name="b_button_description">B</string>
+    <string name="dpad_description">Cruceta</string>
+    <string name="start_button_description">Start</string>
+    <string name="select_button_description">Select</string>
+    <string name="printer_button_description">Impresora</string>
+    <string name="gameboy_button_description">Game Boy</string>
+    <string name="printer_save_button_description">Guardar lo impreso</string>
+    <string name="printer_clear_button_description">Borrar lo impreso</string>
+
+    <string name="quit_confirmation">¿Seguro que quieres salir?</string>
+    <string name="invalid_opcode_title">Código de operación no válido</string>
+    <string name="invalid_opcode_description">GBCG encontró un error y se va a detener. Puede deberse a un error en la ROM que intentabas ejecutar o a una falla de GBCG. Para ver un informe más detallado o reportar el problema, toca \"Enviar comentarios\".</string>
+    <string name="button_send_feedback">Enviar comentarios</string>
+    <string name="button_quit">Salir</string>
+    <string name="button_reboot">Reiniciar</string>
+
+    <!-- RomConfigActivity -->
+    <string name="rom_config_title">Opciones del juego</string>
+    <string name="rom_config_palette">Paleta</string>
+    <string name="rom_config_shader">Shader</string>
+    <string name="rom_config_delete">Borrar configuración</string>
+
+    <!-- CheatActivity -->
+    <string name="cheat_title">Trucos</string>
+    <string name="cheats_summary">Códigos de Game Genie y GameShark para este juego</string>
+    <string name="cheat_add_description">Agregar truco</string>
+    <string name="cheat_edit_description">Editar truco</string>
+    <string name="cheat_description_hint">Descripción</string>
+    <string name="cheat_code_hint">Código (8 o 9 caracteres)</string>
+
+    <!-- SettingsActivity -->
+    <string name="settings_title">Ajustes</string>
+    <string name="settings_language">Idioma</string>
+    <string name="settings_language_system">Predeterminado del sistema</string>
+    <string name="settings_category_controls">Controles</string>
+    <string name="settings_category_controls_summary">Botones en pantalla, vibración, turbo y mandos</string>
+    <string name="settings_category_image">Imagen</string>
+    <string name="settings_category_image_summary">Shaders, paletas, colores de la carcasa y tema de la app</string>
+    <string name="settings_category_sound">Sonido</string>
+    <string name="settings_category_sound_summary">Volumen y música de fondo</string>
+    <string name="settings_category_advanced">Avanzado</string>
+    <string name="settings_category_advanced_summary">Reanudar y guardar, sincronización, latencia de audio y accesorios</string>
+    <string name="settings_category_about">Acerca de</string>
+    <string name="settings_category_about_summary">Versión, código fuente y licencias</string>
+    <string name="settings_group_onscreen">Botones en pantalla</string>
+    <string name="settings_group_vibration">Vibración</string>
+    <string name="settings_group_turbo_gamepad">Turbo y mandos</string>
+    <string name="settings_group_game">Juego</string>
+    <string name="settings_group_app">App</string>
+    <string name="settings_group_saving">Reanudar y guardar</string>
+    <string name="settings_group_emulation">Fotogramas</string>
+    <string name="settings_group_latency">Latencia de audio</string>
+    <string name="settings_group_accessories">Accesorios</string>
+    <string name="settings_version">Versión</string>
+    <string name="settings_source">Código fuente</string>
+
+    <string name="settings_animate_buttons">Animar los botones al presionarlos</string>
+    <string name="settings_auto_resume">Reanudar automáticamente</string>
+    <string name="settings_auto_resume_summary">Retoma los juegos donde los dejaste</string>
+    <string name="settings_auto_save">Guardado automático</string>
+    <string name="settings_auto_save_summary">Guarda cada vez que un juego escribe en la SRAM</string>
+    <string name="settings_back_prompt">Confirmar al salir</string>
+    <string name="settings_back_prompt_summary">Muestra una confirmación, con opción de reiniciar, al salir de un juego</string>
+    <string name="settings_fps">Mostrar contador de FPS</string>
+    <string name="settings_frame_blend">Mezcla de fotogramas</string>
+    <string name="settings_frame_blend_summary">Mezcla fotogramas consecutivos, como la pantalla de una consola real</string>
+    <string name="settings_interlacing">Entrelazado</string>
+    <string name="settings_interlacing_summary">Oscurece líneas alternas, como una consola real (sin mezcla de fotogramas puede parpadear)</string>
+    <string name="settings_turbo_dpad">Turbo con la cruceta</string>
+    <string name="settings_turbo_dpad_summary">Toca dos veces el centro de la cruceta para activar o desactivar el turbo</string>
+    <string name="settings_turbo_speed">Límite del turbo</string>
+    <string name="settings_turbo_toggle">Mostrar interruptor de turbo</string>
+    <string name="settings_vsync">Vsync</string>
+    <string name="settings_vsync_summary">Sincroniza la velocidad con la frecuencia de la pantalla en vez del audio</string>
+
+    <string name="settings_shader_gbc">Shader para GBC</string>
+    <string name="settings_shader_dmg">Shader para DMG</string>
+    <string name="settings_shader_nothing">Ninguno</string>
+    <string name="settings_shader_color_correct">Corrección de color</string>
+    <string name="settings_shader_subpixel">Subpíxel</string>
+    <string name="settings_shader_dot_matrix">Matriz de puntos</string>
+
+    <string name="settings_orientation">Orientación de la pantalla</string>
+    <string name="settings_orientation_system">Sistema</string>
+    <string name="settings_orientation_portrait">Vertical</string>
+    <string name="settings_orientation_landscape_auto">Horizontal (automática)</string>
+    <string name="settings_orientation_landscape_left">Horizontal (izquierda)</string>
+    <string name="settings_orientation_landscape_right">Horizontal (derecha)</string>
+
+    <string name="settings_skin">Carcasa</string>
+    <string name="settings_skin_auto">Automática</string>
+
+    <string name="settings_palette">Paleta DMG</string>
+
+    <string name="settings_dmg_color">Color DMG</string>
+    <string name="settings_dmg_color_light">Claro</string>
+    <string name="settings_dmg_color_dark">Oscuro</string>
+
+    <string name="settings_color">Color GBC</string>
+    <string name="settings_color_berry">Rojo</string>
+    <string name="settings_color_dandelion">Amarillo</string>
+    <string name="settings_color_grape">Morado</string>
+    <string name="settings_color_kiwi">Verde</string>
+    <string name="settings_color_teal">Verde azulado</string>
+
+    <string name="settings_audio_volume">Volumen</string>
+    <string name="settings_audio_printer_volume">Volumen de la impresora</string>
+
+    <string name="settings_audio_background_music">Permitir música de fondo</string>
+    <string name="settings_audio_background_music_summary">La música de otras apps sigue sonando al abrir un juego</string>
+
+    <string name="settings_audio_low_latency">Usar audio de baja latencia</string>
+    <string name="settings_audio_low_latency_summary">Prueba a desactivarlo si tienes problemas de sonido</string>
+
+    <string name="settings_audio_latency">Latencia de audio</string>
+    <string name="settings_audio_latency_summary">Más latencia reduce los cortes de sonido</string>
+
+    <string name="settings_bluetooth_latency">Latencia de audio Bluetooth</string>
+    <string name="settings_bluetooth_latency_summary">Más latencia reduce los cortes de sonido</string>
+
+    <string name="settings_theme">Color de la app</string>
+
+    <string name="settings_night_mode">Modo oscuro</string>
+    <string name="settings_night_mode_system">Sistema</string>
+    <string name="settings_night_mode_on">Activado</string>
+    <string name="settings_night_mode_off">Desactivado</string>
+
+    <string name="settings_oled_night_mode">Modo oscuro OLED</string>
+    <string name="settings_oled_night_mode_summary">Usa un fondo negro puro en modo oscuro</string>
+
+    <string name="settings_camera">Cámara predeterminada</string>
+    <string name="settings_camera_back">Trasera</string>
+    <string name="settings_camera_front">Frontal</string>
+
+    <string name="settings_animate_printer">Animar la impresora</string>
+    <string name="settings_animate_printer_summary">Desactivarlo puede causar problemas al imprimir</string>
+
+    <string name="settings_arrange">Acomodar los botones</string>
+    <string name="settings_grid_snap">Ajustar los botones a una cuadrícula</string>
+    <string name="settings_licenses">Licencias</string>
+
+    <string name="settings_haptic_key_press">Vibrar al presionar un botón</string>
+    <string name="settings_haptic_key_release">Vibrar al soltar un botón</string>
+    <string name="settings_rumble_strength">Intensidad del Rumble Pak</string>
+    <string name="settings_remap">Asignar botones del mando</string>
+    <string name="settings_additional_mappings">Asignaciones adicionales</string>
+    <string name="settings_additional_mappings_summary">Necesarias para dispositivos que no son mandos, como teclados</string>
+
+    <!-- Arrange Activity -->
+    <string name="size_title">Tamaño de los botones</string>
+    <string name="a_b_size">A y B</string>
+    <string name="start_select_size">Start y Select</string>
+    <string name="dpad_size">Cruceta</string>
+    <string name="reset_sizes">Restablecer tamaños</string>
+    <string name="reset_layout">Restablecer posiciones</string>
+
+    <!-- Remap Activity -->
+    <string name="controller_description">Esquema del mando</string>
+    <string name="key_description_a">A</string>
+    <string name="key_description_b">B</string>
+    <string name="key_description_start">Start</string>
+    <string name="key_description_select">Select</string>
+    <string name="key_description_up">Arriba</string>
+    <string name="key_description_down">Abajo</string>
+    <string name="key_description_left">Izquierda</string>
+    <string name="key_description_right">Derecha</string>
+    <string name="key_description_turbo">Turbo</string>
+    <string name="key_description_pause">Pausa</string>
+    <string name="key_description_printer">Impresora</string>
+    <string name="key_description_fps">Mostrar FPS</string>
+    <string name="key_description_frame_blending">Mezcla de fotogramas</string>
+    <string name="key_description_vsync">Vsync</string>
+    <string name="key_description_link_cable">Cable link</string>
+    <string name="key_description_autosave">Guardado automático</string>
+    <string name="key_description_menu">Menú</string>
+    <string name="key_description_interlace">Entrelazado</string>
+    <string name="key_description_shader">Shader</string>
+    <string name="key_description_back">Atrás</string>
+    <string name="key_description_unmapped">Sin asignar</string>
+    <string name="stick_description_dpad">Cruceta</string>
+    <string name="stick_description_tilt">Inclinación</string>
+    <string name="stick_description_unmapped">Sin asignar</string>
+    <string name="select_mapping">Elegir asignación</string>
+
+    <!-- Additional Mappings Activity -->
+    <string name="additional_mappings_title">Asignaciones adicionales</string>
+    <string name="additional_mappings_map_description">Asignado a: <xliff:g>%1$s</xliff:g></string>
+    <string name="additional_mappings_unset">Quitar</string>
+    <string name="additional_mappings_waiting">Esperando que presiones una tecla…</string>
+
+    <!-- License Activity -->
+    <string name="license_title">Licencias</string>
+
+    <!-- Messages -->
+    <string name="message_no_files_app">¡No hay una app para elegir archivos!</string>
+    <string name="message_no_email_app">¡No hay una app para enviar correos!</string>
+    <plurals name="message_importing">
+        <item quantity="one">Importando %d elemento</item>
+        <item quantity="other">Importando %d elementos</item>
+    </plurals>
+    <plurals name="message_imported">
+        <item quantity="one">%d elemento importado</item>
+        <item quantity="other">%d elementos importados</item>
+    </plurals>
+    <string name="message_failed_import">No se pudo importar <xliff:g>%1$s</xliff:g></string>
+    <string name="message_no_export">No hay partidas para exportar</string>
+    <plurals name="message_export_complete">
+        <item quantity="one">%d elemento exportado</item>
+        <item quantity="other">%d elementos exportados</item>
+    </plurals>
+    <string name="message_failed_name">No se pudo obtener el nombre del archivo</string>
+    <string name="message_failed_camera">No se pudo abrir la cámara: <xliff:g>%1$s</xliff:g></string>
+    <string name="message_repeat_back">Presiona ATRÁS otra vez para salir</string>
+    <string name="error_loading_rom">Error al cargar la ROM:\n<xliff:g>%1$s</xliff:g></string>
+    <string name="bug_report_subject">Reporte de error de GBCG</string>
+    <string name="crash_log_header">Registro del error:</string>
+    <string name="turbo_unlimited">0 (sin límite)</string>
+    <string name="key_unknown">Desconocida</string>
+    <string name="license_gbcc_core">GBCC (núcleo del emulador)</string>
+
+    <!-- DMG palettes -->
+    <string name="palette_default">Predeterminada</string>
+    <string name="palette_monochrome">Monocromo</string>
+    <string name="palette_brown">Café</string>
+    <string name="palette_red">Roja</string>
+    <string name="palette_dark_brown">Café oscuro</string>
+    <string name="palette_pastel">Pastel</string>
+    <string name="palette_orange">Naranja</string>
+    <string name="palette_yellow">Amarilla</string>
+    <string name="palette_blue">Azul</string>
+    <string name="palette_dark_blue">Azul oscuro</string>
+    <string name="palette_grey">Gris</string>
+    <string name="palette_green">Verde</string>
+    <string name="palette_dark_green">Verde oscuro</string>
+    <string name="palette_invert">Invertida</string>
+</resources>

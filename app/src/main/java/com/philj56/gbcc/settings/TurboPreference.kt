@@ -3,6 +3,7 @@ package com.philj56.gbcc.settings
 import android.content.Context
 import android.util.AttributeSet
 import androidx.preference.EditTextPreference
+import com.philj56.gbcc.R
 
 class TurboPreference(context: Context, attrs: AttributeSet) :
     EditTextPreference(context, attrs) {
@@ -32,7 +33,7 @@ class TurboPreference(context: Context, attrs: AttributeSet) :
                 "0"
             }
             return when (text?.toFloat()) {
-                0F -> "0 (Unlimited)"
+                0F -> preference.context.getString(R.string.turbo_unlimited)
                 else -> "$text×"
             }
         }

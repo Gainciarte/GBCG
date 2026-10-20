@@ -12,6 +12,7 @@ package com.philj56.gbcc
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.core.os.bundleOf
 import androidx.fragment.app.add
 import androidx.fragment.app.commit
@@ -69,6 +70,19 @@ class SettingsFragment : PreferenceFragmentCompat() {
     override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
         val preferenceResource = requireArguments().getInt("preferenceResource")
         setPreferencesFromResource(preferenceResource, rootKey)
+
+        preferenceManager.findPreference<SummaryListPreference>("app_language")?.let { language ->
+            // An empty value follows the system language
+            // The tags are the ones set here ("es", "pt-BR"...), so they match the list values
+            language.value = AppCompatDelegate.getApplicationLocales().toLanguageTags()
+            language.setOnPreferenceChangeListener { _, newValue ->
+                val tag = newValue as String
+                AppCompatDelegate.setApplicationLocales(
+                    if (tag.isEmpty()) LocaleListCompat.getEmptyLocaleList() else LocaleListCompat.forLanguageTags(tag)
+                )
+                true
+            }
+        }
 
         val nightMode = preferenceManager.findPreference<SummaryListPreference>("night_mode")
         nightMode?.setOnPreferenceChangeListener { _, newValue ->

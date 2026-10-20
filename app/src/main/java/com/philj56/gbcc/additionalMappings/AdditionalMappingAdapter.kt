@@ -23,7 +23,7 @@ class AdditionalMappingAdapter(
         val (description, mapKey) = objects[position]
         val prefs = PreferenceManager.getDefaultSharedPreferences(context)
 
-        val keyName = keyCodeNames[prefs.getInt(mapKey, -1)] ?: "Unknown"
+        val keyName = keyCodeNames[prefs.getInt(mapKey, -1)] ?: context.getString(R.string.key_unknown)
 
         textDescription.text = description
         textMapping.text = context.getString(R.string.additional_mappings_map_description, keyName)

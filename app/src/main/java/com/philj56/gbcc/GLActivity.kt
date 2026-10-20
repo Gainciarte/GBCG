@@ -259,10 +259,10 @@ class GLActivity : BaseActivity(), SensorEventListener {
                     .setPositiveButton(R.string.button_send_feedback) { _, _ ->
                         val intent = Intent(Intent.ACTION_SENDTO).apply {
                             data = Uri.parse("mailto:")
-                            putExtra(Intent.EXTRA_SUBJECT, "Bug report")
+                            putExtra(Intent.EXTRA_SUBJECT, getString(R.string.bug_report_subject))
                             putExtra(
                                 Intent.EXTRA_TEXT,
-                                "Crash log:\n----------\n" + filesDir.resolve("gbcc.log").readText()
+                                getString(R.string.crash_log_header) + "\n----------\n" + filesDir.resolve("gbcc.log").readText()
                             )
                         }
                         try {
@@ -534,7 +534,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
         if (!checkRom(filename)) {
             Toast.makeText(
                 this,
-                "Error loading ROM:\n" + getErrorMessage().trim(),
+                getString(R.string.error_loading_rom, getErrorMessage().trim()),
                 Toast.LENGTH_SHORT
             ).show()
             finish()
@@ -774,7 +774,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
         if (!loadedSuccessfully) {
             Toast.makeText(
                 this,
-                "Error loading ROM:\n" + getErrorMessage().trim(),
+                getString(R.string.error_loading_rom, getErrorMessage().trim()),
                 Toast.LENGTH_SHORT
             ).show()
             finish()

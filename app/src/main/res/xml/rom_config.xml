@@ -52,7 +52,7 @@
 
     <com.philj56.gbcc.settings.SummaryListPreference
         app:defaultValue="Default"
-        app:entries="@array/dmg_palettes_array"
+        app:entries="@array/dmg_palette_names_array"
         app:entryValues="@array/dmg_palettes_array"
         app:key="palette"
         app:title="@string/rom_config_palette"

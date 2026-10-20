@@ -38,6 +38,9 @@ El fork recién empieza. Por ahora, lo distinto del original es:
   selección múltiple, mover, crear carpetas y "Multiplayer", que no funcionaba; "Importar"
   ahora importa solo partidas (`.sav`, estados y `.zip` de partidas). Ya no se
   incluye la ROM tutorial de GBCC.
+- **Idiomas:** inglés, español, francés, alemán, italiano y portugués de Brasil,
+  con un selector en Settings > Language (o en el idioma por app de Android 13 y
+  superior). Los mensajes que dibuja el núcleo dentro del juego siguen en inglés.
 - **Ajustes reorganizados:** Controls, Picture, Sound, Advanced y About (versión,
   código fuente y licencias), en vez de las cinco categorías originales.
 - **Menú de pausa:** al tocar la pantalla del juego (o el botón de menú de un
