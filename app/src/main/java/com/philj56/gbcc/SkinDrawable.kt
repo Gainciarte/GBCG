@@ -54,7 +54,7 @@ class SkinLook(
     companion object {
         // name: (opaque body, tint of the translucent plastic), from photos of real consoles
         private val GBC_COLOURS = mapOf(
-            "Berry" to (0xFFC81E5A.toInt() to 0xFFE0558A.toInt()),
+            "Berry" to (0xFFD82C50.toInt() to 0xFFE8607A.toInt()),
             "Dandelion" to (0xFFF0C62A.toInt() to 0xFFF6D45A.toInt()),
             "Grape" to (0xFF5753BE.toInt() to 0xFF9784CB.toInt()),  // translucent: Atomic Purple
             "Kiwi" to (0xFF84DE28.toInt() to 0xFFA2E35E.toInt()),
@@ -179,7 +179,10 @@ class SkinDrawable(context: Context, private val look: SkinLook) : Drawable() {
         val slots: Slots?,
         val screws: List<PointF>,
         val interior: Bitmap?,
+        val labels: List<Label>,
+        val dish: Float,  // radius of what's round around the d-pad (dish, rubber)
     )
+    private class Label(val text: String, val x: Float, val y: Float, val align: Paint.Align, val box: RectF)
     private class Speaker(val x: Float, val y: Float, val r: Float)
     private class Slots(val x: Float, val y: Float, val length: Float, val spacing: Float, val width: Float)
     private var geometry: Geometry? = null
@@ -209,20 +212,35 @@ class SkinDrawable(context: Context, private val look: SkinLook) : Drawable() {
             return
         }
         if (!look.gbc) {
-            drawDmgRecesses(canvas, p)
+            drawDmgRecesses(canvas, p, g.dish)
         }
         drawGaps(canvas, p)
         g.speaker?.let { drawGbcGrille(canvas, it) }
         g.slots?.let { drawDmgGrille(canvas, it, p.pillRotation) }
-        if (look.gbc) drawGbcLabels(canvas, p) else drawDmgLabels(canvas, p)
+        if (look.gbc) drawGbcLabels(canvas, g.labels) else drawDmgLabels(canvas, p)
     }
 
     private fun build(p: SkinParts, w: Float, h: Float): Geometry {
-        val speaker = if (look.gbc) placeSpeaker(p, w, h) else null
+        val dish = dishRadius(p, w, h)
+        val labels = if (look.gbc) placeGbcLabels(p, w, h) else emptyList()
+        val speaker = if (look.gbc) placeSpeaker(p, w, h, labels.map { it.box }) else null
         val slots = if (!look.gbc) placeSlots(p, w, h) else null
-        val screws = if (look.translucent) placeScrews(p, w, h, speaker) else emptyList()
-        val interior = if (look.translucent) renderInterior(p, w, h, speaker, screws) else null
-        return Geometry(speaker, slots, screws, interior)
+        val screws = if (look.translucent) placeScrews(p, w, h, speaker, dish) else emptyList()
+        val interior = if (look.translucent) renderInterior(p, w, h, speaker, screws, dish) else null
+        return Geometry(speaker, slots, screws, interior, labels, dish)
+    }
+
+    /** What's round around the d-pad (the DMG's dish, the GBC's rubber) is about 0.6 of its
+     * width in radius, but no bigger than fits on the body, clear of the screen. */
+    private fun dishRadius(p: SkinParts, w: Float, h: Float): Float {
+        val d = p.dpad
+        val m = dp(6f)
+        val cx = d.centerX()
+        val cy = d.centerY()
+        val nx = cx.coerceIn(p.screen.left, p.screen.right)
+        val ny = cy.coerceIn(p.screen.top, p.screen.bottom)
+        val fit = minOf(cx - m, w - cx - m, cy - m, h - cy - m, hypot(cx - nx, cy - ny) - m)
+        return max(min(d.width() * 0.6f, fit), d.width() / 2 + dp(2f))
     }
 
     // ---- Shape of the body -------------------------------------------------------------
@@ -289,10 +307,16 @@ class SkinDrawable(context: Context, private val look: SkinLook) : Drawable() {
 
     /** The GBC's grille goes below the A and B buttons, as big as the real one (about a
      * fifth of the width) if there's room, and smaller, or not at all, if there isn't. */
-    private fun placeSpeaker(p: SkinParts, w: Float, h: Float): Speaker? {
-        val blocked = blockers(p, dp(8f))
+    private fun placeSpeaker(p: SkinParts, w: Float, h: Float, labels: List<RectF>): Speaker? {
+        val blocked = blockers(p, dp(8f)) + labels.map { RectF(it).apply { inset(-dp(4f), -dp(4f)) } }
         var r = min(w, h) * 0.105f
-        val ideal = PointF(p.a.centerX() - dp(6f), max(p.select.centerY(), p.b.bottom + r + dp(8f)) + dp(14f))
+        // As on the real one: beside the pills, its middle a little below theirs; in
+        // landscape, where the pills are on the other side, below A and B
+        val ideal = if (portrait(w, h)) {
+            PointF(p.a.centerX() - dp(6f), max(p.select.centerY() + r * 0.15f, p.b.bottom + r + dp(8f)))
+        } else {
+            PointF(p.a.centerX() - dp(6f), max(p.a.bottom, p.b.bottom) + r + dp(12f))
+        }
         val step = dp(4f)
         while (r >= dp(24f)) {
             var best: PointF? = null
@@ -453,7 +477,7 @@ class SkinDrawable(context: Context, private val look: SkinLook) : Drawable() {
 
     /** The DMG's sunken areas: a dish under the d-pad, a slanted capsule under A and B and a
      * well around each pill, plus the little arrows moulded around the d-pad. */
-    private fun drawDmgRecesses(canvas: Canvas, p: SkinParts) {
+    private fun drawDmgRecesses(canvas: Canvas, p: SkinParts, dish: Float) {
         // A recess: a touch darker inside, its upper left wall in shade and its lower right
         // wall catching the light, both soft
         fun recess(left: Float, top: Float, right: Float, bottom: Float, radius: Float, angle: Float = 0f,
@@ -474,7 +498,7 @@ class SkinDrawable(context: Context, private val look: SkinLook) : Drawable() {
             canvas.restore()
         }
         // Dish under the d-pad
-        val dr = p.dpad.width() * 0.62f
+        val dr = dish
         val dx = p.dpad.centerX()
         val dy = p.dpad.centerY()
         recess(dx - dr, dy - dr, dx + dr, dy + dr, dr)
@@ -513,19 +537,52 @@ class SkinDrawable(context: Context, private val look: SkinLook) : Drawable() {
 
     // ---- Labels --------------------------------------------------------------------------
 
-    /** The GBC's "SELECT" and "START" are moulded into the plastic below the pills. */
-    private fun drawGbcLabels(canvas: Canvas, p: SkinParts) {
+    /** The GBC's "SELECT" and "START" are moulded into the plastic below the pills. Each goes
+     * below its pill if it fits there, or else above it, or beside it (in landscape the
+     * pills are one above the other), never on top of another label or control. */
+    private fun placeGbcLabels(p: SkinParts, w: Float, h: Float): List<Label> {
+        gbcLabelPaint()
+        val placed = ArrayList<Label>()
+        val ts = text.textSize
+        val others = listOf(p.screen, p.dpad, p.a, p.b, p.select, p.start) + p.avoid
+        for ((r, label) in listOf(p.select to "SELECT", p.start to "START")) {
+            val tw = text.measureText(label)
+            val gap = ts * 0.35f
+            val candidates = listOf(
+                Label(label, r.centerX(), r.bottom + gap + ts * 0.8f, Paint.Align.CENTER,
+                    RectF(r.centerX() - tw / 2, r.bottom + gap, r.centerX() + tw / 2, r.bottom + gap + ts)),
+                Label(label, r.centerX(), r.top - gap - ts * 0.2f, Paint.Align.CENTER,
+                    RectF(r.centerX() - tw / 2, r.top - gap - ts, r.centerX() + tw / 2, r.top - gap)),
+                Label(label, r.left - gap, r.centerY() + ts * 0.3f, Paint.Align.RIGHT,
+                    RectF(r.left - gap - tw, r.centerY() - ts / 2, r.left - gap, r.centerY() + ts / 2)),
+                Label(label, r.right + gap, r.centerY() + ts * 0.3f, Paint.Align.LEFT,
+                    RectF(r.right + gap, r.centerY() - ts / 2, r.right + gap + tw, r.centerY() + ts / 2)),
+            )
+            val fits = candidates.firstOrNull { c ->
+                val b = c.box
+                inside(b.left, b.top, dp(4f), w, h) && inside(b.right, b.top, dp(4f), w, h) &&
+                    inside(b.left, b.bottom, dp(4f), w, h) && inside(b.right, b.bottom, dp(4f), w, h) &&
+                    others.none { RectF.intersects(it, b) } && placed.none { RectF.intersects(it.box, b) }
+            }
+            if (fits != null) placed.add(fits)
+        }
+        return placed
+    }
+
+    private fun gbcLabelPaint() {
         text.typeface = Typeface.create("sans-serif-condensed", Typeface.BOLD)
-        text.textSize = dp(13f) * (p.select.width() / dp(64f)).coerceIn(0.7f, 1.4f)
+        text.textSize = dp(13f) * ((parts?.select?.width() ?: dp(64f)) / dp(64f)).coerceIn(0.7f, 1.4f)
         text.letterSpacing = 0.02f
         text.textScaleX = 1f
-        for ((r, label) in listOf(p.select to "SELECT", p.start to "START")) {
-            var y = r.bottom + text.textSize * 1.25f
-            if (y + text.descent() > bounds.height() - dp(6f)) {
-                y = r.top - text.textSize * 0.45f
-            }
-            embossed(canvas, label, r.centerX(), y)
+    }
+
+    private fun drawGbcLabels(canvas: Canvas, labels: List<Label>) {
+        gbcLabelPaint()
+        for (l in labels) {
+            text.textAlign = l.align
+            embossed(canvas, l.text, l.x, l.y)
         }
+        text.textAlign = Paint.Align.CENTER
     }
 
     private fun embossed(canvas: Canvas, label: String, x: Float, y: Float) {
@@ -538,23 +595,21 @@ class SkinDrawable(context: Context, private val look: SkinLook) : Drawable() {
         canvas.drawText(label, x, y, text)
     }
 
-    /** The DMG's labels are printed in navy blue (light grey on the dark skin), in a bold,
-     * wide face: "B" and "A" well below the buttons, "SELECT" and "START" below the pills,
-     * turned like them. */
+    /** The DMG's labels are printed in navy blue (light grey on the dark skin), in its wide,
+     * heavy lettering (DmgLettering): "B" and "A" below the buttons, "SELECT" and "START"
+     * below the pills, turned like them. */
     private fun drawDmgLabels(canvas: Canvas, p: SkinParts) {
-        text.typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
-        text.color = if (look.dark) 0xFF8D93B5.toInt() else 0xFF2A2D6A.toInt()
-        text.letterSpacing = 0.12f
-        text.textScaleX = 1.15f
-        text.textSize = dp(11f) * (p.a.width() / dp(64f)).coerceIn(0.7f, 1.4f)
+        fill.shader = null
+        fill.color = if (look.dark) 0xFF8D93B5.toInt() else 0xFF24255E.toInt()
+        // About as wide as the pill, as on the real one
+        val cap = p.select.width() / DmgLettering.width("SELECT")
         for ((r, label) in listOf(p.b to "B", p.a to "A")) {
-            canvas.drawText(label, r.centerX() + r.width() * 0.08f, r.bottom + text.textSize * 1.9f, text)
+            DmgLettering.draw(canvas, label, r.centerX() + r.width() * 0.1f, r.bottom + cap * 1.9f, cap, fill)
         }
-        text.textSize = dp(10f) * (p.select.width() / dp(64f)).coerceIn(0.7f, 1.4f)
         for ((r, label) in listOf(p.select to "SELECT", p.start to "START")) {
             canvas.save()
             canvas.rotate(p.pillRotation, r.centerX(), r.centerY())
-            canvas.drawText(label, r.centerX(), r.bottom + text.textSize * 1.3f, text)
+            DmgLettering.draw(canvas, label, r.centerX(), r.bottom + cap * 1.75f, cap, fill)
             canvas.restore()
         }
     }
@@ -562,7 +617,7 @@ class SkinDrawable(context: Context, private val look: SkinLook) : Drawable() {
     // ---- Inside of the translucent plastic -----------------------------------------------
 
     /** Screw posts, where a real GBC has them, wherever they don't run into anything. */
-    private fun placeScrews(p: SkinParts, w: Float, h: Float, speaker: Speaker?): List<PointF> {
+    private fun placeScrews(p: SkinParts, w: Float, h: Float, speaker: Speaker?, dish: Float): List<PointF> {
         val d = p.dpad
         val candidates = listOf(
             PointF((d.right + p.b.left) / 2, d.centerY() - d.height() * 0.15f),
@@ -581,7 +636,7 @@ class SkinDrawable(context: Context, private val look: SkinLook) : Drawable() {
         )
         val r = dp(9f)
         // Just outside the rubber around the d-pad, as on the real one
-        val ring = d.width() * 0.66f
+        val ring = dish + dp(6f)
         val blocked = blockers(p, dp(6f)) + listOfNotNull(boardRect(p, h)?.let { RectF(it).apply { inset(-dp(6f), -dp(6f)) } }) + listOf(
             RectF(d.centerX() - ring, d.centerY() - ring, d.centerX() + ring, d.centerY() + ring)
         )
@@ -602,7 +657,7 @@ class SkinDrawable(context: Context, private val look: SkinLook) : Drawable() {
      * pads under the buttons, a small board low on the left, a few parts under Select and
      * Start, the speaker and the screw posts. It's drawn at a reduced size and scaled up,
      * which blurs it as the plastic does, then tinted by the plastic. */
-    private fun renderInterior(p: SkinParts, w: Float, h: Float, speaker: Speaker?, screws: List<PointF>): Bitmap {
+    private fun renderInterior(p: SkinParts, w: Float, h: Float, speaker: Speaker?, screws: List<PointF>, dish: Float): Bitmap {
         val scale = 0.45f
         val bitmap = Bitmap.createBitmap(max(1, (w * scale).toInt()), max(1, (h * scale).toInt()), Bitmap.Config.ARGB_8888)
         val c = Canvas(bitmap)
@@ -649,7 +704,7 @@ class SkinDrawable(context: Context, private val look: SkinLook) : Drawable() {
             }
         }
 
-        drawMembranes(c, p, paint, line)
+        drawMembranes(c, p, paint, line, dish)
         speaker?.let { drawSpeaker(c, it, paint, line) }
         // Screw posts, hollow, seen end on
         for (sc in screws) {
@@ -701,6 +756,7 @@ class SkinDrawable(context: Context, private val look: SkinLook) : Drawable() {
         val board = RectF(dp(14f), p.dpad.centerY() + p.dpad.height() * 0.68f,
             min(p.select.left - dp(12f), p.dpad.centerX() + p.dpad.width() * 0.32f), h - dp(30f))
         board.top = max(board.top, board.bottom - board.width() * 1.05f)
+        board.right = min(board.right, board.left + board.height() * 1.25f)
         return if (board.width() > dp(36f) && board.height() > dp(36f)) board else null
     }
 
@@ -868,10 +924,10 @@ class SkinDrawable(context: Context, private val look: SkinLook) : Drawable() {
 
     /** The rubber pads under the buttons, pale cyan rubber: a ring around the d-pad, a ring
      * around A and around B joined by a bridge, and a darker capsule around Select and Start. */
-    private fun drawMembranes(c: Canvas, p: SkinParts, paint: Paint, line: Paint) {
+    private fun drawMembranes(c: Canvas, p: SkinParts, paint: Paint, line: Paint, dish: Float) {
         // A band of rubber around the d-pad
-        val dr = p.dpad.width() * 0.6f
-        val band = p.dpad.width() * 0.11f
+        val band = min(p.dpad.width() * 0.11f, (dish - p.dpad.width() / 2) * 1.2f)
+        val dr = dish - band / 2
         line.color = RUBBER
         line.strokeWidth = band
         c.drawCircle(p.dpad.centerX(), p.dpad.centerY(), dr, line)
@@ -893,8 +949,10 @@ class SkinDrawable(context: Context, private val look: SkinLook) : Drawable() {
         for (r in listOf(p.a, p.b)) c.drawCircle(r.centerX(), r.centerY(), rr + ab / 2, line)
 
         val g = dp(6f)
-        val pills = if (hypot(p.select.centerX() - p.start.centerX(), p.select.centerY() - p.start.centerY()) <
-            p.select.width() * 2.5f) listOf(RectF(p.select).apply { union(p.start) }) else listOf(p.select, p.start)
+        // One capsule for both when they're side by side, as on the real one; one each otherwise
+        val sideBySide = kotlin.math.abs(p.select.centerY() - p.start.centerY()) < p.select.height() &&
+            kotlin.math.abs(p.select.centerX() - p.start.centerX()) < p.select.width() * 2.5f
+        val pills = if (sideBySide) listOf(RectF(p.select).apply { union(p.start) }) else listOf(p.select, p.start)
         for (r in pills) {
             val box = RectF(r).apply { inset(-g, -g) }
             paint.color = 0xFF56616A.toInt()
@@ -939,4 +997,66 @@ class SkinDrawable(context: Context, private val look: SkinLook) : Drawable() {
 
     @Deprecated("Deprecated in Java")
     override fun getOpacity() = PixelFormat.OPAQUE
+}
+
+/*
+ * The DMG's lettering, drawn stroke by stroke as on the real console (only the letters it
+ * uses): wide, heavy and geometric, with rounded corners; the A has a flat, rounded top,
+ * and the B a straight back. Sizes are in cap heights.
+ */
+private object DmgLettering {
+    private const val WIDE = 1.15f
+    private const val NARROW = 1.0f   // the L
+    private const val STROKE = 0.28f
+    private const val GAP = 0.3f
+
+    private fun glyphWidth(ch: Char) = if (ch == 'L') NARROW else WIDE
+
+    /** Width of the text, in cap heights. */
+    fun width(text: String) = text.sumOf { (glyphWidth(it) + GAP).toDouble() }.toFloat() - GAP
+
+    /** Draws the text centred on x, with its baseline at y, cap tall. */
+    fun draw(canvas: Canvas, text: String, x: Float, y: Float, cap: Float, paint: Paint) {
+        val style = paint.style
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = STROKE * cap
+        paint.strokeCap = Paint.Cap.BUTT
+        paint.strokeJoin = Paint.Join.MITER
+        paint.pathEffect = android.graphics.CornerPathEffect(0.22f * cap)
+        var left = x - width(text) * cap / 2
+        for (ch in text) {
+            canvas.drawPath(glyph(ch, left, y - cap, cap), paint)
+            if (ch == 'B') {
+                // Straight back: square corners on the left
+                paint.pathEffect = null
+                val a = STROKE / 2 * cap
+                canvas.drawLine(left + a, y - cap, left + a, y, paint)
+                paint.pathEffect = android.graphics.CornerPathEffect(0.22f * cap)
+            }
+            left += (glyphWidth(ch) + GAP) * cap
+        }
+        paint.pathEffect = null
+        paint.style = style
+    }
+
+    private fun glyph(ch: Char, x0: Float, top: Float, cap: Float): android.graphics.Path {
+        val a = STROKE / 2
+        val w = glyphWidth(ch)
+        val path = android.graphics.Path()
+        fun poly(vararg pts: Float) {
+            path.moveTo(x0 + pts[0] * cap, top + pts[1] * cap)
+            for (i in 2 until pts.size step 2) path.lineTo(x0 + pts[i] * cap, top + pts[i + 1] * cap)
+        }
+        when (ch) {
+            'S' -> poly(w, a, a, a, a, 0.5f, w - a, 0.5f, w - a, 1 - a, 0f, 1 - a)
+            'E' -> { poly(w, a, a, a, a, 1 - a, w, 1 - a); poly(a, 0.5f, w - 0.12f, 0.5f) }
+            'L' -> poly(a, 0f, a, 1 - a, w, 1 - a)
+            'C' -> poly(w, a, a, a, a, 1 - a, w, 1 - a)
+            'T' -> { poly(0f, a, w, a); poly(w / 2, a, w / 2, 1f) }
+            'A' -> { poly(a, 1f, a, a, w - a, a, w - a, 1f); poly(a, 0.58f, w - a, 0.58f) }
+            'R' -> { poly(a, 1f, a, a, w - a, a, w - a, 0.54f, a, 0.54f); poly(w * 0.48f, 0.54f, w - a, 1f) }
+            'B' -> { poly(a, a, w - a, a, w - a, 1 - a, a, 1 - a); path.close(); poly(a, 0.5f, w - a, 0.5f) }
+        }
+        return path
+    }
 }

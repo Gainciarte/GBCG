@@ -44,15 +44,15 @@ class SkinPreviewTest {
         avoid = listOf(RectF(462f, 1090f, 600f, 1144f)),
     )
 
-    // The landscape layout, roughly: screen in the middle, d-pad and Select/Start on the
-    // left, A and B on the right
+    // The landscape layout, measured on a screenshot: screen in the middle, d-pad and
+    // Select/Start (one above the other) on the left, A and B on the right
     private fun landscapeParts(dmg: Boolean) = SkinParts(
-        screen = RectF(600f, 0f, 1800f, 1080f),
-        dpad = RectF(80f, 300f, 520f, 740f),
-        a = RectF(2130f, 480f, 2306f, 656f),
-        b = RectF(1920f, 580f, 2096f, 756f),
-        select = RectF(120f, 960f, 294f, 1018f),
-        start = RectF(120f, 40f, 294f, 98f),
+        screen = RectF(654f, 0f, 1860f, 1080f),
+        dpad = RectF(132f, 288f, 630f, 786f),
+        a = RectF(2180f, 322f, 2356f, 498f),
+        b = RectF(1960f, 410f, 2136f, 586f),
+        select = RectF(432f, 960f, 606f, 1018f),
+        start = RectF(432f, 828f, 606f, 886f),
         pillRotation = if (dmg) -25f else 0f,
         avoid = emptyList(),
     )
@@ -60,6 +60,7 @@ class SkinPreviewTest {
     @Test
     fun render() {
         render("gbc_teal_real", gbc = true, colour = "Teal", translucent = false, realistic = true)
+        render("gbc_berry_real", gbc = true, colour = "Berry", translucent = false, realistic = true)
         render("gbc_teal_flat", gbc = true, colour = "Teal", translucent = false, realistic = false)
         render("gbc_grape_translucent", gbc = true, colour = "Grape", translucent = true, realistic = true)
         render("gbc_white_translucent", gbc = true, colour = "White", translucent = true, realistic = true)
@@ -71,6 +72,7 @@ class SkinPreviewTest {
         height = 1080
         render("land_gbc_grape_translucent", gbc = true, colour = "Grape", translucent = true, realistic = true)
         render("land_dmg_light_real", gbc = false, colour = "Teal", translucent = false, realistic = true)
+        render("land_gbc_berry_real", gbc = true, colour = "Berry", translucent = false, realistic = true)
         width = 1080
         height = 2290
     }

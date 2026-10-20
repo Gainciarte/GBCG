@@ -82,7 +82,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="150dp"
+        android:layout_marginBottom="120dp"
         android:background="@android:color/transparent"
         android:contentDescription="@string/a_button_description"
         android:scaleType="fitCenter"
@@ -98,16 +98,16 @@
         android:layout_width="64dp"
         android:layout_height="64dp"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="48dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="16dp"
         android:background="@android:color/transparent"
         android:contentDescription="@string/b_button_description"
         android:scaleType="fitCenter"
         android:src="@drawable/ic_button_ab"
-        app:layout_constraintEnd_toEndOf="@+id/buttonA"
+        app:layout_constraintEnd_toStartOf="@+id/buttonA"
         app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toEndOf="@+id/screenBorderRight"
-        app:layout_constraintTop_toBottomOf="@+id/buttonA" />
+        app:layout_constraintTop_toTopOf="@+id/buttonA" />
 
     <com.philj56.gbcc.arrange.ResizableImage
         android:id="@+id/buttonSelect"

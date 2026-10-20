@@ -109,7 +109,7 @@ def letter_mask(letter, w, h, margin, centre_x, centre_y, cap):
     (centre_x, centre_y)."""
     big = Image.new("L", ((w + 2 * margin) * SS, (h + 2 * margin) * SS), 0)
     d = ImageDraw.Draw(big)
-    stroke = cap * 0.055
+    stroke = cap * 0.075
     sw = max(1, int(stroke * SS))
 
     def pt(x, y):
@@ -161,7 +161,8 @@ def round_button(color, pressed, size=256, letter=None):
     height = height + dome * mask
     if letter:
         # Engraved into the button, not raised
-        glyph = letter_mask(letter, size, size, margin, cx, cy, size * 0.48)
+        # A little left of the middle, as on the real buttons
+        glyph = letter_mask(letter, size, size, margin, cx - size * 0.045, cy, size * 0.48)
         height = height - box_blur(glyph, size * 0.004 * SS) * size * 0.014 * SS
     base = hex_rgb(color) * (0.85 if pressed else 1.0)
     rgba, grain = shade(mask, height / SS, base, spec=0.22 if pressed else 0.42, shine=26, ambient=0.45,
@@ -295,7 +296,7 @@ def plastic_texture(size=256, bump=1.1, strength=0.2, coarse=0.35, sparkle=0.0):
 
 # The GBC's buttons are a different colour on each shell (measured on photos of real ones)
 GBC_BUTTONS = {
-    "berry": "#2A2A2E",
+    "berry": "#2C2A28",
     "dandelion": "#1E2030",
     "grape": "#3B4242",
     "kiwi": "#28292E",
