@@ -145,8 +145,11 @@
     <string name="settings_color_grape">Lila</string>
     <string name="settings_color_kiwi">Grün</string>
     <string name="settings_color_teal">Blaugrün</string>
-    <string name="settings_color_atomic_purple">Lila (durchscheinend)</string>
-    <string name="settings_color_clear">Transparent</string>
+    <string name="settings_color_white">Weiß</string>
+    <string name="settings_translucent">Durchscheinender Kunststoff</string>
+    <string name="settings_translucent_summary">Zeigt das Innere der Konsole durch das Gehäuse</string>
+    <string name="settings_realistic_buttons">Realistische Tasten</string>
+    <string name="settings_realistic_buttons_summary">Mit Relief, Glanz und Beschriftung wie die echten</string>
 
     <string name="settings_audio_volume">Lautstärke</string>
     <string name="settings_audio_printer_volume">Druckerlautstärke</string>

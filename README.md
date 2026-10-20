@@ -46,12 +46,27 @@ El fork recién empieza. Por ahora, lo distinto del original es:
   idioma de la app; los mensajes pasan por `gbcc.cpp` antes de dibujarse (opción
   `--wrap` del enlazador). La fuente del núcleo solo tiene caracteres Latin-1, así
   que esos textos no pueden llevar otros.
-- **Carcasas con textura:** la carcasa tiene un grano de plástico mate y los botones
-  tienen relieve, brillo y sombra (imágenes generadas con
-  [`sources/make_skin.py`](sources/make_skin.py)). La carcasa GBC viene en siete
-  colores: rojo, amarillo, morado, verde, verde azulado y dos translúcidas, morado
-  translúcido y transparente, en las que se ve una placa de circuito por dentro. La
-  DMG, en claro y oscuro.
+- **Carcasas realistas:** el foco gráfico de GBCG es parecerse a la consola de verdad.
+  La carcasa se dibuja alrededor de donde están los botones
+  ([`SkinDrawable.kt`](app/src/main/java/com/philj56/gbcc/SkinDrawable.kt)): colores
+  medidos en fotos de consolas reales, grano de plástico, la holgura oscura alrededor
+  de cada botón, el parlante (la grilla de agujeros y hoyuelos de la GBC, las seis
+  ranuras de la DMG) y los rótulos (en relieve bajo Select y Start en la GBC, impresos
+  en azul marino en la DMG, con sus recesos bajo la cruceta, A/B y las píldoras). La
+  GBC viene en rojo, amarillo, morado, verde, verde azulado y blanco, y cualquiera
+  puede ser de **plástico translúcido** (interruptor en los ajustes): se ve el interior
+  como a través del plástico esmerilado real (gomas celestes bajo los botones, una
+  plaquita llena de componentes, el parlante y los postes de los tornillos); el morado
+  translúcido es la Atomic Purple y el blanco, la Clear. La DMG viene en claro y
+  oscuro, con las píldoras a 25°, como la real.
+- **Botones planos o realistas:** un interruptor en los ajustes (apagado por defecto)
+  cambia los botones planos originales por unos con relieve, brillo y sombra, del
+  color de los de cada carcasa real, con las letras A y B grabadas y flechas en la
+  cruceta de la GBC, y la cruceta ranurada de la DMG (imágenes generadas con
+  [`sources/make_skin.py`](sources/make_skin.py)). Los botones conservan su tamaño.
+  `SkinPreviewTest` dibuja todas las carcasas en el PC, con el código de dibujo de
+  Android (Robolectric), en `app/build/skin-previews`:
+  `./gradlew testDebugUnitTest --tests "*SkinPreviewTest*"`.
 - **Ajustes reorganizados:** Controls, Picture, Sound, Advanced y About (versión,
   código fuente y licencias), en vez de las cinco categorías originales. Un solo
   ajuste de color pinta la carcasa y la app.

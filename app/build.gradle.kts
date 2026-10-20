@@ -73,6 +73,11 @@ android {
 	// r28 or later aligns the native library to 16 KB pages, which Google Play
 	// requires for apps targeting Android 15 or higher
 	ndkVersion = "28.2.13676358"
+	testOptions {
+		unitTests {
+			isIncludeAndroidResources = true
+		}
+	}
 	namespace = "com.philj56.gbcc"
 }
 
@@ -94,6 +99,9 @@ dependencies {
 	implementation("androidx.recyclerview:recyclerview:1.4.0")
 	implementation("com.google.android.material:material:1.12.0")
 	testImplementation("junit:junit:4.13.2")
+	// Renders the skins on the PC, with Android's own drawing code (SkinPreviewTest)
+	testImplementation("org.robolectric:robolectric:4.14.1")
+	testImplementation("androidx.test:core:1.6.1")
 	androidTestImplementation("androidx.test:runner:1.5.2")
 	androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 }

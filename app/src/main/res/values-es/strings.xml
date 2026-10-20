@@ -145,8 +145,11 @@
     <string name="settings_color_grape">Morado</string>
     <string name="settings_color_kiwi">Verde</string>
     <string name="settings_color_teal">Verde azulado</string>
-    <string name="settings_color_atomic_purple">Morado translúcido</string>
-    <string name="settings_color_clear">Transparente</string>
+    <string name="settings_color_white">Blanco</string>
+    <string name="settings_translucent">Plástico translúcido</string>
+    <string name="settings_translucent_summary">Deja ver el interior de la consola a través de la carcasa</string>
+    <string name="settings_realistic_buttons">Botones realistas</string>
+    <string name="settings_realistic_buttons_summary">Con relieve, brillo y letras, como los de verdad</string>
 
     <string name="settings_audio_volume">Volumen</string>
     <string name="settings_audio_printer_volume">Volumen de la impresora</string>

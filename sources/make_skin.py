@@ -1,20 +1,27 @@
 """
-Generates GBCG's skin artwork: the plastic texture of the console body, the circuit board
-seen through the translucent skins, and realistic buttons (A/B, Start/Select and the
-d-pad, with their pressed states) for the GBC, DMG and dark DMG skins.
+Generates GBCG's skin artwork: realistic buttons (A/B, Start/Select and the d-pad, with
+their pressed states) for the GBC, DMG and dark DMG skins, and the grain of the plastic
+of the console body. The body itself (its colour, the speaker grille, the labels and the
+inside of the translucent skins) is drawn by the app, in SkinDrawable.kt, because it
+depends on where the buttons are.
 
 Buttons are lit like real plastic: each shape gets a height map (a rounded bevel, plus a
-dome or a dimple), its surface normals are lit from the top left (diffuse + specular),
-its rim darkens where it sinks into the body, and a fine grain is added on top. Each
-button fills its image edge to edge with the same shape as the original vector buttons,
-so the buttons keep their size on screen (the views scale the image to fit them).
+dome or a dimple, the GBC's engraved letters and raised arrows), its surface normals are
+lit from the top left (diffuse + specular), its rim darkens where it sinks into the body,
+and a fine grain is added on top. Each button fills its image edge to edge with the same
+shape as the original vector buttons, so the buttons keep their size on screen (the
+views scale the image to fit them).
+
+As on the real consoles, the GBC has the letters on its A and B buttons and arrows on
+its d-pad; the DMG has plain buttons (its labels are printed on the body).
 
 Writes PNGs to app/src/main/res/drawable-nodpi. Usage: python sources/make_skin.py
-(needs numpy and Pillow). Previews of everything go to sources/skin_preview.png.
+(needs numpy and Pillow). Previews of everything
+go to sources/skin_preview.png.
 """
 import os
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "app", "src", "main", "res", "drawable-nodpi")
@@ -96,8 +103,53 @@ def finish(rgba_grain, w, h):
     return Image.fromarray((a * 255).astype(np.uint8), "RGBA")
 
 
-def round_button(color, pressed, size=256):
-    """A/B: a circle as wide as the image, like the original ic_button_ab.xml."""
+def letter_mask(letter, w, h, margin, centre_x, centre_y, cap):
+    """Supersampled mask of the GBC's A or B: sans serif letters drawn with a single stroke
+    width (as on the real buttons), tall and narrow, of cap height cap, centred on
+    (centre_x, centre_y)."""
+    big = Image.new("L", ((w + 2 * margin) * SS, (h + 2 * margin) * SS), 0)
+    d = ImageDraw.Draw(big)
+    stroke = cap * 0.055
+    sw = max(1, int(stroke * SS))
+
+    def pt(x, y):
+        return ((x + margin) * SS, (y + margin) * SS)
+
+    def dot(x, y):  # round the stroke ends and joins
+        r = stroke * SS / 2
+        cx, cy = pt(x, y)
+        d.ellipse([cx - r, cy - r, cx + r, cy + r], fill=255)
+
+    top = centre_y - cap / 2 + stroke / 2
+    bottom = centre_y + cap / 2 - stroke / 2
+    if letter == "A":
+        half = cap * 0.33
+        bar = top + (bottom - top) * 0.64
+        d.line([pt(centre_x - half, bottom), pt(centre_x, top), pt(centre_x + half, bottom)], fill=255, width=sw,
+               joint="curve")
+        f = (bar - top) / (bottom - top)
+        d.line([pt(centre_x - half * f, bar), pt(centre_x + half * f, bar)], fill=255, width=sw)
+        dot(centre_x, top)
+    else:
+        width = cap * 0.62
+        left = centre_x - width / 2
+        middle = top + (bottom - top) * 0.47
+        d.line([pt(left, top), pt(left, bottom)], fill=255, width=sw)
+        for y0, y1, right in ((top, middle, left + width * 0.8), (middle, bottom, left + width)):
+            r = (y1 - y0) / 2
+            d.line([pt(left, y0), pt(right - r, y0)], fill=255, width=sw)
+            d.line([pt(left, y1), pt(right - r, y1)], fill=255, width=sw)
+            box = [pt(right - 2 * r, y0)[0] - sw / 2, pt(0, y0)[1] - sw / 2,
+                   pt(right, y1)[0] + sw / 2, pt(0, y1)[1] + sw / 2]
+            d.arc(box, -90, 90, fill=255, width=sw)
+        for x, y in ((left, top), (left, bottom)):
+            dot(x, y)
+    return np.asarray(big).astype(float) / 255
+
+
+def round_button(color, pressed, size=256, letter=None):
+    """A/B: a circle as wide as the image, like the original ic_button_ab.xml, nearly flat
+    on top with a rounded edge. The GBC's have their letter engraved, as on the real buttons."""
     margin = size // 8
     x, y = grid(size, size, margin)
     cx = cy = r = size * 0.5
@@ -105,8 +157,12 @@ def round_button(color, pressed, size=256):
     mask = (d <= r).astype(float)
     depth = (0.5 if pressed else 1.0) * size * 0.05
     height = box_blur(mask, size * 0.06 * SS) * depth * SS
-    dome = np.clip(1 - (d / r) ** 2, 0, 1) * size * (0.03 if pressed else 0.075) * SS
+    dome = np.clip(1 - (d / r) ** 2, 0, 1) * size * (0.015 if pressed else 0.035) * SS
     height = height + dome * mask
+    if letter:
+        # Engraved into the button, not raised
+        glyph = letter_mask(letter, size, size, margin, cx, cy, size * 0.48)
+        height = height - box_blur(glyph, size * 0.004 * SS) * size * 0.014 * SS
     base = hex_rgb(color) * (0.85 if pressed else 1.0)
     rgba, grain = shade(mask, height / SS, base, spec=0.22 if pressed else 0.42, shine=26, ambient=0.45,
                         diffuse=0.72, rim=0.45 if pressed else 0.35, rim_width=size * 0.03)
@@ -136,16 +192,54 @@ def cross_mask(x, y, s):
     return np.maximum(vertical, horizontal), lo, hi
 
 
-def dpad(color, size=320):
+def triangle_mask(x, y, cx, cy, size, direction):
+    """An arrow head (equilateral-ish triangle) pointing up, down, left or right."""
+    # Work in the frame of an arrow pointing up
+    u, v = {"up": (x - cx, y - cy), "down": (cx - x, cy - y),
+            "left": (cy - y, x - cx), "right": (y - cy, cx - x)}[direction]
+    half = size * 0.5
+    inside = (v <= half * 0.75) & (v >= -half * 0.75 + np.abs(u) * 1.7)
+    return inside.astype(float)
+
+
+def dpad(color, size=320, style="gbc"):
+    """The d-pad. The GBC's has a dimple in the middle and a raised arrow head near the end
+    of each arm; the DMG's has three grooves across each arm and a small dome in the middle,
+    sitting in a sunken ring."""
     margin = size // 8
     x, y = grid(size, size, margin)
     mask, lo, hi = cross_mask(x, y, size)
     height = box_blur(mask, size * 0.035 * SS) * size * 0.045 * SS
-    # The dimple in the middle
     cx = cy = size * 0.5
     d = np.sqrt((x - cx) ** 2 + (y - cy) ** 2)
-    rd = size * 0.12
-    height -= np.clip(1 - (d / rd) ** 2, 0, 1) * size * 0.02 * SS
+    if style == "gbc":
+        rd = size * 0.12
+        height -= np.clip(1 - (d / rd) ** 2, 0, 1) * size * 0.02 * SS
+        t = size * 0.135
+        far = lo * 0.48
+        heads = np.zeros_like(mask)
+        for direction, (ax, ay) in {"up": (cx, far), "down": (cx, size - far),
+                                    "left": (far, cy), "right": (size - far, cy)}.items():
+            heads = np.maximum(heads, triangle_mask(x, y, ax, ay, t, direction))
+        height += box_blur(heads, size * 0.004 * SS) * size * 0.012 * SS
+    else:
+        # Sunken ring with a dome inside
+        ring = ((d > size * 0.07) & (d < size * 0.105)).astype(float)
+        height -= box_blur(ring, size * 0.006 * SS) * size * 0.012 * SS
+        height += np.clip(1 - (d / (size * 0.07)) ** 2, 0, 1) ** 0.5 * size * 0.02 * SS
+        # Three grooves across each arm, from near the middle towards the end
+        arm = hi - lo
+        grooves = np.zeros_like(mask)
+        for k in range(3):
+            along = lo * (0.2 + 0.24 * k)  # distance from the outer end of the arm
+            gw, gl = size * 0.032, arm * 0.62
+            for gx0, gy0, gx1, gy1 in (
+                    (cx - gl / 2, along, cx + gl / 2, along + gw),                    # up
+                    (cx - gl / 2, size - along - gw, cx + gl / 2, size - along),      # down
+                    (along, cy - gl / 2, along + gw, cy + gl / 2),                    # left
+                    (size - along - gw, cy - gl / 2, size - along, cy + gl / 2)):     # right
+                grooves = np.maximum(grooves, rounded_rect(x, y, gx0, gy0, gx1, gy1, gw / 2))
+        height -= box_blur(grooves, size * 0.004 * SS) * size * 0.01 * SS
     rgba, grain = shade(mask, height / SS, hex_rgb(color), spec=0.32, shine=22, ambient=0.45, diffuse=0.7,
                         rim=0.35, rim_width=size * 0.025)
     return finish((crop(rgba, size, size, margin), grain), size, size)
@@ -168,122 +262,108 @@ def dpad_pressed_overlay(directions, size=320):
     return img.resize((size, size), Image.LANCZOS)
 
 
-def plastic_texture(size=256):
-    """Tileable grain for the console body: light and dark specks at low opacity."""
+def tileable_noise(size, sigma):
+    """Gaussian-blurred white noise that tiles seamlessly (blurred in frequency space)."""
     n = RNG.normal(0, 1, (size, size))
-    # Blur with wrap-around so the tile is seamless
     k = np.fft.fft2(n)
     fy = np.fft.fftfreq(size)[:, None]
     fx = np.fft.fftfreq(size)[None, :]
-    k *= np.exp(-(fx ** 2 + fy ** 2) / (2 * 0.18 ** 2))
+    k *= np.exp(-2 * (np.pi * sigma) ** 2 * (fx ** 2 + fy ** 2))
     n = np.real(np.fft.ifft2(k))
-    n /= n.std()
+    return n / n.std()
+
+
+def plastic_texture(size=256, bump=1.1, strength=0.2, coarse=0.35, sparkle=0.0):
+    """Tileable overlay that gives the body the pebbled finish of moulded plastic: a field
+    of tiny bumps, lit from the top left like the buttons. Lit slopes become white at low
+    opacity, slopes in shadow black, so it works over any colour. bump is the size of the
+    bumps in pixels, coarse adds a broader unevenness, and sparkle a few bright points."""
+    h = tileable_noise(size, bump) + coarse * tileable_noise(size, bump * 4)
+    gy = (np.roll(h, -1, 0) - np.roll(h, 1, 0)) / 2
+    gx = (np.roll(h, -1, 1) - np.roll(h, 1, 1)) / 2
+    n = np.stack([-gx, -gy, np.full_like(h, 2.2)], axis=-1)
+    n /= np.linalg.norm(n, axis=-1, keepdims=True)
+    lit = n @ LIGHT - LIGHT[2] * (2.2 / np.sqrt(2.2 ** 2))  # 0 on a flat surface
+    lit /= np.abs(lit).max()
+    if sparkle > 0:
+        lit = np.maximum(lit, (RNG.random((size, size)) > 1 - sparkle) * 0.9)
     rgba = np.zeros((size, size, 4))
-    light = n > 0
-    rgba[..., :3] = np.where(light[..., None], 1.0, 0.0)
-    rgba[..., 3] = np.clip(np.abs(n) * 0.05, 0, 0.16)
+    rgba[..., :3] = np.where(lit[..., None] > 0, 1.0, 0.0)
+    rgba[..., 3] = np.clip(np.abs(lit) * strength, 0, 1)
     return Image.fromarray((rgba * 255).astype(np.uint8), "RGBA")
 
 
-def circuit_board(size=512):
-    """Tileable circuit board, seen through the translucent skins."""
-    from PIL import ImageDraw
-    big = Image.new("RGB", (size * SS, size * SS), (38, 66, 48))
-    d = ImageDraw.Draw(big)
-    s = SS
-
-    def wrap(draw_fn):
-        for ox in (-size, 0, size):
-            for oy in (-size, 0, size):
-                draw_fn(ox * s, oy * s)
-
-    copper = (150, 128, 70)
-    for _ in range(70):
-        x0, y0 = RNG.integers(0, size, 2)
-        pts = [(x0, y0)]
-        for _ in range(RNG.integers(2, 5)):
-            px, py = pts[-1]
-            step = int(RNG.integers(20, 90))
-            dirn = RNG.integers(0, 6)
-            dx, dy = [(1, 0), (0, 1), (1, 1), (-1, 1), (-1, 0), (0, -1)][dirn]
-            pts.append((px + dx * step, py + dy * step))
-        width = int(RNG.choice([2, 2, 3, 4]))
-        def draw_trace(ox, oy, pts=pts, width=width):
-            d.line([(px * s + ox, py * s + oy) for px, py in pts], fill=copper, width=width * s, joint="curve")
-            for px, py in (pts[0], pts[-1]):
-                rr = (width + 2) * s
-                d.ellipse([px * s + ox - rr, py * s + oy - rr, px * s + ox + rr, py * s + oy + rr], fill=(180, 160, 95))
-        wrap(draw_trace)
-    for _ in range(7):
-        x0, y0 = RNG.integers(0, size, 2)
-        w, h = int(RNG.integers(40, 110)), int(RNG.integers(24, 70))
-        def draw_chip(ox, oy, x0=x0, y0=y0, w=w, h=h):
-            for i in range(4, w - 3, 8):
-                for py in (y0 - 5, y0 + h + 1):
-                    d.rectangle([(x0 + i) * s + ox, py * s + oy, (x0 + i + 3) * s + ox, (py + 4) * s + oy], fill=(170, 170, 165))
-            d.rectangle([x0 * s + ox, y0 * s + oy, (x0 + w) * s + ox, (y0 + h) * s + oy], fill=(24, 24, 26))
-            d.rectangle([(x0 + 3) * s + ox, (y0 + 3) * s + oy, (x0 + w - 3) * s + ox, (y0 + h - 3) * s + oy], fill=(32, 32, 35))
-        wrap(draw_chip)
-    img = big.resize((size, size), Image.LANCZOS)
-    a = np.asarray(img).astype(float) / 255
-    a = np.clip(a * (1 + RNG.normal(0, 0.04, a.shape[:2])[..., None]), 0, 1)
-    return Image.fromarray((a * 255).astype(np.uint8), "RGB")
-
-
-COLOURS = {
-    "": {"ab": "#2a2a2a", "ss": "#333333", "dpad": "#2a2a2a"},          # GBC
-    "_dmg": {"ab": "#9E265A", "ss": "#918E92", "dpad": "#2a2a2a"},     # DMG, light
-    "_dmg_dark": {"ab": "#4e4c50", "ss": "#4e4c50", "dpad": "#4e4c50"},  # DMG, dark
+# The GBC's buttons are a different colour on each shell (measured on photos of real ones)
+GBC_BUTTONS = {
+    "berry": "#2A2A2E",
+    "dandelion": "#1E2030",
+    "grape": "#3B4242",
+    "kiwi": "#28292E",
+    "teal": "#5E6463",
+    "white": "#2F3033",
 }
+DMG = {"ab": "#982A5A", "ss": "#4A525A", "dpad": "#3A4045"}        # colours of a real DMG
+DMG_DARK = {"ab": "#4e4c50", "ss": "#4e4c50", "dpad": "#4e4c50"}
 
 
 def main():
     os.makedirs(OUT, exist_ok=True)
+    # Everything in drawable-nodpi comes from here: clear what earlier runs left
+    for old in os.listdir(OUT):
+        if old.endswith(".png"):
+            os.remove(os.path.join(OUT, old))
+    # The realistic buttons are named real_*; the flat ones are the original vectors
+    # (ic_button_*.xml in res/drawable), and a setting picks between them (ButtonArt.kt)
     images = {}
-    for suffix, c in COLOURS.items():
-        images[f"ic_button_ab{suffix}"] = round_button(c["ab"], False)
-        images[f"ic_button_ab{suffix}_pressed"] = round_button(c["ab"], True)
-        images[f"ic_button_startselect{suffix}"] = pill_button(c["ss"], False)
-        images[f"ic_button_startselect{suffix}_pressed"] = pill_button(c["ss"], True)
-    images["ic_button_dpad_background"] = dpad(COLOURS[""]["dpad"])
-    images["ic_button_dpad_background_dmg_dark"] = dpad(COLOURS["_dmg_dark"]["dpad"])
-    images["ic_button_dpad_highlight"] = Image.new("RGBA", (320, 320), (0, 0, 0, 0))
+    for shell, colour in GBC_BUTTONS.items():
+        for letter in ("a", "b"):
+            images[f"real_button_{letter}_{shell}"] = round_button(colour, False, letter=letter.upper())
+            images[f"real_button_{letter}_{shell}_pressed"] = round_button(colour, True, letter=letter.upper())
+        images[f"real_button_startselect_{shell}"] = pill_button(colour, False)
+        images[f"real_button_startselect_{shell}_pressed"] = pill_button(colour, True)
+        images[f"real_dpad_{shell}"] = dpad(colour, style="gbc")
+    for suffix, c in {"_dmg": DMG, "_dmg_dark": DMG_DARK}.items():
+        images[f"real_button_ab{suffix}"] = round_button(c["ab"], False)
+        images[f"real_button_ab{suffix}_pressed"] = round_button(c["ab"], True)
+        images[f"real_button_startselect{suffix}"] = pill_button(c["ss"], False)
+        images[f"real_button_startselect{suffix}_pressed"] = pill_button(c["ss"], True)
+    images["real_dpad_dmg"] = dpad(DMG["dpad"], style="dmg")
+    images["real_dpad_dmg_dark"] = dpad(DMG_DARK["dpad"], style="dmg")
     for name, dirs in {
         "up": ["up"], "down": ["down"], "left": ["left"], "right": ["right"],
         "up_left": ["up", "left"], "up_right": ["up", "right"],
         "down_left": ["down", "left"], "down_right": ["down", "right"],
     }.items():
-        images[f"ic_button_dpad_highlight_pressed_{name}"] = dpad_pressed_overlay(dirs)
-    images["skin_texture"] = plastic_texture()
-    images["skin_pcb"] = circuit_board()
+        images[f"real_dpad_pressed_{name}"] = dpad_pressed_overlay(dirs)
+    # The GBC's plastic is visibly pebbled; the DMG's is smoother
+    images["skin_texture"] = plastic_texture(bump=1.1, strength=0.22, coarse=0.35, sparkle=0.004)
+    images["skin_texture_dmg"] = plastic_texture(bump=0.8, strength=0.10, coarse=0.25)
     for name, img in images.items():
         img.save(os.path.join(OUT, name + ".png"), optimize=True)
 
-    # Preview sheet
-    sheet = Image.new("RGBA", (1100, 560), (0, 79, 80, 255))
-    tex = images["skin_texture"]
-    for tx in range(0, 1100, 256):
-        for ty in range(0, 560, 256):
-            sheet.alpha_composite(tex, (tx, ty))
-    xpos = 20
-    for suffix in COLOURS:
-        sheet.alpha_composite(images[f"ic_button_ab{suffix}"].resize((128, 128), Image.LANCZOS), (xpos, 20))
-        sheet.alpha_composite(images[f"ic_button_ab{suffix}_pressed"].resize((128, 128), Image.LANCZOS), (xpos + 140, 20))
-        sheet.alpha_composite(images[f"ic_button_startselect{suffix}"].resize((150, 50), Image.LANCZOS), (xpos, 170))
-        sheet.alpha_composite(images[f"ic_button_startselect{suffix}_pressed"].resize((150, 50), Image.LANCZOS), (xpos + 160, 170))
-        xpos += 360
-    sheet.alpha_composite(images["ic_button_dpad_background"].resize((200, 200), Image.LANCZOS), (20, 250))
-    pressed = images["ic_button_dpad_background"].copy()
-    pressed.alpha_composite(images["ic_button_dpad_highlight_pressed_up_right"])
-    sheet.alpha_composite(pressed.resize((200, 200), Image.LANCZOS), (240, 250))
-    pcb = images["skin_pcb"].convert("RGBA").resize((300, 300))
-    # The same tints as the app's translucent skins (Skin.kt)
-    purple = Image.new("RGBA", pcb.size, (91, 46, 145, 176))
-    pcb_purple = pcb.copy(); pcb_purple.alpha_composite(purple)
-    clear = Image.new("RGBA", pcb.size, (220, 227, 232, 110))
-    pcb_clear = pcb.copy(); pcb_clear.alpha_composite(clear)
-    sheet.alpha_composite(pcb_purple.crop((0, 0, 280, 280)), (480, 260))
-    sheet.alpha_composite(pcb_clear.crop((0, 0, 280, 280)), (790, 260))
+    # Preview sheet, on the colours of a real Teal GBC and a DMG
+    sheet = Image.new("RGBA", (1100, 600), (10, 144, 165, 255))
+    dmg_side = Image.new("RGBA", (550, 600), (216, 209, 193, 255))
+    sheet.alpha_composite(dmg_side, (550, 0))
+    for tx in range(0, 550, 256):
+        for ty in range(0, 600, 256):
+            sheet.alpha_composite(images["skin_texture"].crop((0, 0, min(256, 550 - tx), min(256, 600 - ty))), (tx, ty))
+            sheet.alpha_composite(images["skin_texture_dmg"].crop((0, 0, min(256, 550 - tx), min(256, 600 - ty))), (550 + tx, ty))
+    def put(name, w, h, x, y):
+        sheet.alpha_composite(images[name].resize((w, h), Image.LANCZOS), (x, y))
+    put("real_dpad_teal", 200, 200, 20, 20)
+    put("real_button_b_teal", 120, 120, 250, 90)
+    put("real_button_a_teal", 120, 120, 390, 40)
+    put("real_button_b_teal_pressed", 120, 120, 250, 240)
+    put("real_button_a_teal_pressed", 120, 120, 390, 240)
+    put("real_button_startselect_teal", 120, 40, 60, 420)
+    put("real_button_startselect_teal_pressed", 120, 40, 200, 420)
+    put("real_dpad_dmg", 200, 200, 570, 20)
+    put("real_button_ab_dmg", 120, 120, 800, 90)
+    put("real_button_ab_dmg_pressed", 120, 120, 940, 40)
+    put("real_button_startselect_dmg", 120, 40, 610, 420)
+    put("real_dpad_dmg_dark", 140, 140, 800, 380)
+    put("real_button_ab_dmg_dark", 90, 90, 960, 400)
     sheet.convert("RGB").save(os.path.join(ROOT, "sources", "skin_preview.png"))
 
 

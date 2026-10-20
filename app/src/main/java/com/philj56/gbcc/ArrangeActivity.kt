@@ -40,11 +40,42 @@ class ArrangeActivity : BaseActivity() {
     // The system bars are hidden, so only keep clear of the display cutout
     override val insetTypes = WindowInsetsCompat.Type.displayCutout()
 
+    private var skin: SkinDrawable? = null
+
+    private fun updateSkin() {
+        skin?.parts = SkinParts.measure(
+            binding.root,
+            listOf(binding.screen, binding.screenBorderTop, binding.screenBorderBottom,
+                binding.screenBorderLeft, binding.screenBorderRight),
+            binding.dpad.root, binding.buttonA, binding.buttonB, binding.buttonSelect, binding.buttonStart,
+            listOf(binding.turboToggleLayout.root)
+        )
+    }
+
     private fun updateLayout(gbc: Boolean) {
         // The skin goes on the layout, not the window, so the strip kept clear of
         // the display cutout stays black, as it was before apps went edge to edge
         window.setBackgroundDrawableResource(android.R.color.black)
-        binding.root.background = Skin.background(this, prefs, gbc)
+        skin = SkinDrawable(this, SkinLook.from(prefs, gbc))
+        binding.root.background = skin
+        // The grille, the labels and the inside of the console go around the buttons
+        binding.root.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> updateSkin() }
+        for (moved in listOf(binding.buttonA, binding.buttonB, binding.buttonStart, binding.buttonSelect)) {
+            moved.onMoved = { updateSkin() }
+        }
+        binding.dpad.root.onMoved = { updateSkin() }
+        binding.turboToggleLayout.root.onMoved = { updateSkin() }
+
+        val art = ButtonArt(this, prefs, gbc)
+        binding.buttonA.setImageDrawable(art.a())
+        binding.buttonB.setImageDrawable(art.b())
+        binding.buttonStart.setImageDrawable(art.startSelect())
+        binding.buttonSelect.setImageDrawable(art.startSelect())
+        binding.dpad.dpadBackground.setImageResource(art.dpad)
+        binding.dpad.dpadHighlight.setImageResource(art.dpadReleased)
+        art.dpadTint?.let {
+            binding.dpad.dpadBackground.setColorFilter(ContextCompat.getColor(this, it), android.graphics.PorterDuff.Mode.SRC_IN)
+        }
 
         binding.resetLayout.setOnClickListener { resetLayout() }
         binding.resetSizes.setOnClickListener { resetSizes() }
@@ -58,27 +89,15 @@ class ArrangeActivity : BaseActivity() {
             val theme = prefs.getString("dmg_color", "Light")
             if (theme == "Dark") {
                 screenBorderColor = ContextCompat.getColor(this, R.color.dmgDarkScreenBorder)
-                binding.dpad.dpadBackground.setImageResource(R.drawable.ic_button_dpad_background_dmg_dark)
-
-                binding.buttonA.setImageResource(R.drawable.ic_button_ab_dmg_dark_selector)
-                binding.buttonB.setImageResource(R.drawable.ic_button_ab_dmg_dark_selector)
-
-                binding.buttonStart.setImageResource(R.drawable.ic_button_startselect_dmg_dark_selector)
-                binding.buttonSelect.setImageResource(R.drawable.ic_button_startselect_dmg_dark_selector)
-
                 binding.turboToggleLayout.turboToggle.thumbTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.dmgDarkToggleThumb))
                 binding.turboToggleLayout.turboToggle.trackTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.dmgDarkToggleTrack))
             } else {
                 screenBorderColor = ContextCompat.getColor(this, R.color.dmgLightScreenBorder)
-                binding.buttonA.setImageResource(R.drawable.ic_button_ab_dmg_selector)
-                binding.buttonB.setImageResource(R.drawable.ic_button_ab_dmg_selector)
-
-                binding.buttonStart.setImageResource(R.drawable.ic_button_startselect_dmg_selector)
-                binding.buttonSelect.setImageResource(R.drawable.ic_button_startselect_dmg_selector)
             }
 
-            binding.buttonStart.rotation = -45f
-            binding.buttonSelect.rotation = -45f
+            // The DMG's pills are turned about 25 degrees, as on the real console
+            binding.buttonStart.rotation = -25f
+            binding.buttonSelect.rotation = -25f
 
             val borders = arrayOf(
                 binding.screenBorderTop,
@@ -238,6 +257,7 @@ class ArrangeActivity : BaseActivity() {
         binding.dpad.root.translationY = 0f
         binding.turboToggleLayout.root.translationX = 0f
         binding.turboToggleLayout.root.translationY = 0f
+        updateSkin()
     }
 
     private fun valueToSize(value: Float) : Float {
@@ -273,6 +293,7 @@ class ArrangeActivity : BaseActivity() {
                 binding.dpad.root.scaleY = scale
             }
         }
+        updateSkin()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

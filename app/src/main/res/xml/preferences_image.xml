@@ -46,6 +46,22 @@
             app:title="@string/settings_color"
             app:iconSpaceReserved="false" />
 
+        <SwitchPreferenceCompat
+            app:widgetLayout="@layout/preference_widget_material_switch"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false"
+            app:key="translucent"
+            app:title="@string/settings_translucent"
+            app:summary="@string/settings_translucent_summary" />
+
+        <SwitchPreferenceCompat
+            app:widgetLayout="@layout/preference_widget_material_switch"
+            app:defaultValue="false"
+            app:iconSpaceReserved="false"
+            app:key="realistic_buttons"
+            app:title="@string/settings_realistic_buttons"
+            app:summary="@string/settings_realistic_buttons_summary" />
+
         <com.philj56.gbcc.settings.SummaryListPreference
             app:defaultValue="Light"
             app:entries="@array/dmg_color_names_array"

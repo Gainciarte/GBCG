@@ -176,6 +176,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
     private var currentScreen = Screen.GAMEBOY
 
     private lateinit var binding: ActivityGlBinding
+    private lateinit var buttonArt: ButtonArt
 
     // The system bars are hidden, so only keep clear of the display cutout
     override val insetTypes = WindowInsetsCompat.Type.displayCutout()
@@ -386,11 +387,33 @@ class GLActivity : BaseActivity(), SensorEventListener {
         }
     }
 
+    private fun measureSkin() = SkinParts.measure(
+        binding.root,
+        listOf(binding.screen, binding.screenBorderTop, binding.screenBorderBottom,
+            binding.screenBorderLeft, binding.screenBorderRight),
+        binding.dpad.root, binding.buttonA, binding.buttonB, binding.buttonSelect, binding.buttonStart,
+        listOf(binding.turboToggle)
+    )
+
     private fun updateLayout(gbc: Boolean) {
         // The skin goes on the layout, not the window, so the strip kept clear of
         // the display cutout stays black, as it was before apps went edge to edge
         window.setBackgroundDrawableResource(android.R.color.black)
-        binding.root.background = Skin.background(this, prefs, gbc)
+        val skin = SkinDrawable(this, SkinLook.from(prefs, gbc))
+        binding.root.background = skin
+        // The grille, the labels and the inside of the console go around the buttons
+        binding.root.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ -> skin.parts = measureSkin() }
+
+        buttonArt = ButtonArt(this, prefs, gbc)
+        binding.buttonA.setImageDrawable(buttonArt.a())
+        binding.buttonB.setImageDrawable(buttonArt.b())
+        binding.buttonStart.setImageDrawable(buttonArt.startSelect())
+        binding.buttonSelect.setImageDrawable(buttonArt.startSelect())
+        binding.dpad.dpadBackground.setImageResource(buttonArt.dpad)
+        binding.dpad.dpadHighlight.setImageResource(buttonArt.dpadReleased)
+        buttonArt.dpadTint?.let {
+            binding.dpad.dpadBackground.setColorFilter(ContextCompat.getColor(this, it), PorterDuff.Mode.SRC_IN)
+        }
 
         binding.screen.setOnClickListener { toggleMenu() }
         binding.turboToggle.setOnClickListener { toggleTurbo() }
@@ -400,28 +423,16 @@ class GLActivity : BaseActivity(), SensorEventListener {
             val theme = prefs.getString("dmg_color", "Light")
             if (theme == "Dark") {
                 screenBorderColor = ContextCompat.getColor(this, R.color.dmgDarkScreenBorder)
-                binding.dpad.dpadBackground.setImageResource(R.drawable.ic_button_dpad_background_dmg_dark)
-
-                binding.buttonA.setImageResource(R.drawable.ic_button_ab_dmg_dark_selector)
-                binding.buttonB.setImageResource(R.drawable.ic_button_ab_dmg_dark_selector)
-
-                binding.buttonStart.setImageResource(R.drawable.ic_button_startselect_dmg_dark_selector)
-                binding.buttonSelect.setImageResource(R.drawable.ic_button_startselect_dmg_dark_selector)
-
                 binding.turboToggle.thumbTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.dmgDarkToggleThumb))
                 binding.turboToggle.trackTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.dmgDarkToggleTrack))
             } else {
                 screenBorderColor = ContextCompat.getColor(this, R.color.dmgLightScreenBorder)
-                binding.buttonA.setImageResource(R.drawable.ic_button_ab_dmg_selector)
-                binding.buttonB.setImageResource(R.drawable.ic_button_ab_dmg_selector)
-
-                binding.buttonStart.setImageResource(R.drawable.ic_button_startselect_dmg_selector)
-                binding.buttonSelect.setImageResource(R.drawable.ic_button_startselect_dmg_selector)
             }
 
 
-            binding.buttonStart.rotation = -45f
-            binding.buttonSelect.rotation = -45f
+            // The DMG's pills are turned about 25 degrees, as on the real console
+            binding.buttonStart.rotation = -25f
+            binding.buttonSelect.rotation = -25f
 
             val borders = arrayOf(
                 binding.screenBorderTop,
@@ -634,19 +645,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
                     if (changed) {
                         hapticVibrate(view, true)
                         if (animateButtons) {
-                            binding.dpad.dpadHighlight.setImageResource(
-                                when (state) {
-                                    1 -> R.drawable.ic_button_dpad_highlight_pressed_up
-                                    2 -> R.drawable.ic_button_dpad_highlight_pressed_down
-                                    4 -> R.drawable.ic_button_dpad_highlight_pressed_left
-                                    5 -> R.drawable.ic_button_dpad_highlight_pressed_up_left
-                                    6 -> R.drawable.ic_button_dpad_highlight_pressed_down_left
-                                    8 -> R.drawable.ic_button_dpad_highlight_pressed_right
-                                    9 -> R.drawable.ic_button_dpad_highlight_pressed_up_right
-                                    10 -> R.drawable.ic_button_dpad_highlight_pressed_down_right
-                                    else -> R.drawable.ic_button_dpad_highlight
-                                }
-                            )
+                            binding.dpad.dpadHighlight.setImageResource(buttonArt.dpadPressed(state))
                         }
                     }
                 }
@@ -654,7 +653,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
                     updateDpad(0)
                     hapticVibrate(view, false)
                     if (animateButtons) {
-                        binding.dpad.dpadHighlight.setImageResource(R.drawable.ic_button_dpad_highlight)
+                        binding.dpad.dpadHighlight.setImageResource(buttonArt.dpadReleased)
                     }
                 }
             }

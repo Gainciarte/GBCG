@@ -30,6 +30,7 @@ abstract class BaseActivity : AppCompatActivity() {
         // Same edge-to-edge look on older Android versions as on Android 15 and higher
         enableEdgeToEdge()
         prefs = PreferenceManager.getDefaultSharedPreferences(this)
+        SkinLook.migrate(prefs)
         themeResource = getThemeResource()
         oledNightMode = getOledNightMode()
         setTheme(themeResource)
@@ -79,8 +80,6 @@ abstract class BaseActivity : AppCompatActivity() {
             "Grape" -> R.style.Theme_GBCC_Grape
             "Kiwi" -> R.style.Theme_GBCC_Kiwi
             "Teal" -> R.style.Theme_GBCC_Teal
-            // The translucent skins: the purple one takes the purple theme, the clear one the default
-            "AtomicPurple" -> R.style.Theme_GBCC_Grape
             else -> R.style.Theme_GBCC_Teal
         }
     }

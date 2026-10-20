@@ -153,8 +153,11 @@
     <string name="settings_color_grape">Purple</string>
     <string name="settings_color_kiwi">Green</string>
     <string name="settings_color_teal">Blue-green</string>
-    <string name="settings_color_atomic_purple">Translucent purple</string>
-    <string name="settings_color_clear">Clear</string>
+    <string name="settings_color_white">White</string>
+    <string name="settings_translucent">Translucent plastic</string>
+    <string name="settings_translucent_summary">Shows the inside of the console through the skin</string>
+    <string name="settings_realistic_buttons">Realistic buttons</string>
+    <string name="settings_realistic_buttons_summary">Relief, shine and lettering, like the real ones</string>
 
     <string name="settings_audio_volume">Volume</string>
     <string name="settings_audio_printer_volume">Printer volume</string>

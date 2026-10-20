@@ -12,6 +12,9 @@ class ResizableImage : AppCompatImageView {
     var gridBase = 0
     private var floating: Boolean = false
 
+    /** Called when the user drops it somewhere new. */
+    var onMoved: (() -> Unit)? = null
+
     constructor(context: Context) : super(context) {
         addMotionListener()
         addLongClickListener()
@@ -29,10 +32,9 @@ class ResizableImage : AppCompatImageView {
                 return@OnTouchListener view.performClick()
             }
 
-            when (motionEvent.actionMasked) {
-                MotionEvent.ACTION_UP -> {
-                    floating = false
-                }
+            val dropped = motionEvent.actionMasked == MotionEvent.ACTION_UP
+            if (dropped) {
+                floating = false
             }
 
             val x = motionEvent.rawX
@@ -46,6 +48,9 @@ class ResizableImage : AppCompatImageView {
                 view.y = y - view.height / 2
             }
 
+            if (dropped) {
+                onMoved?.invoke()
+            }
             return@OnTouchListener true
         })
     }
