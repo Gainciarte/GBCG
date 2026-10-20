@@ -77,6 +77,42 @@ class SkinPreviewTest {
         height = 2290
     }
 
+    /** Flat and realistic buttons, released and pressed, side by side (pressed.png). */
+    @Test
+    fun renderPressed() {
+        val cell = 300
+        val bitmap = Bitmap.createBitmap(cell * 6, cell * 3, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        canvas.drawColor(0xFFF0C62A.toInt())
+        fun put(id: Int, col: Int, row: Int, w: Int = 220, h: Int = 220) {
+            val d = context.getDrawable(id)!!
+            val x = col * cell + (cell - w) / 2
+            val y = row * cell + (cell - h) / 2
+            d.setBounds(x, y, x + w, y + h)
+            d.draw(canvas)
+        }
+        val flat = listOf(R.drawable.ic_button_dpad_background to 0)
+        // Row 0: flat d-pad released, up, right, up-right; flat A released and pressed
+        val flatOver = listOf(R.drawable.ic_button_dpad_highlight, R.drawable.ic_button_dpad_highlight_pressed_up,
+            R.drawable.ic_button_dpad_highlight_pressed_right, R.drawable.ic_button_dpad_highlight_pressed_up_right)
+        val realOver = flatOver
+        for ((i, over) in flatOver.withIndex()) {
+            put(flat[0].first, i, 0); put(over, i, 0)
+        }
+        put(R.drawable.ic_button_ab, 4, 0, 180, 180); put(R.drawable.ic_button_ab_pressed, 5, 0, 180, 180)
+        // Row 1: the same, realistic
+        for ((i, over) in realOver.withIndex()) {
+            put(R.drawable.real_dpad_dandelion, i, 1); put(over, i, 1)
+        }
+        put(R.drawable.real_button_a_dandelion, 4, 1, 180, 180); put(R.drawable.real_button_a_dandelion_pressed, 5, 1, 180, 180)
+        // Row 2: pills, flat and realistic, released and pressed
+        put(R.drawable.ic_button_startselect, 0, 2, 240, 80); put(R.drawable.ic_button_startselect_pressed, 1, 2, 240, 80)
+        put(R.drawable.real_button_startselect_dandelion, 2, 2, 240, 80)
+        put(R.drawable.real_button_startselect_dandelion_pressed, 3, 2, 240, 80)
+        put(R.drawable.real_button_ab_dmg, 4, 2, 180, 180); put(R.drawable.real_button_ab_dmg_pressed, 5, 2, 180, 180)
+        FileOutputStream(File(out, "pressed.png")).use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
     private fun render(
         name: String, gbc: Boolean, colour: String, translucent: Boolean, realistic: Boolean,
         dark: Boolean = false

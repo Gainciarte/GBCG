@@ -91,33 +91,21 @@ class ButtonArt(private val context: Context, prefs: SharedPreferences, gbc: Boo
     /** The flat d-pad of the dark DMG is the usual one, tinted with this colour. */
     val dpadTint: Int? = if (!realistic && dark) R.color.dmgDarkDpad else null
 
-    /** What goes over the d-pad while no direction is pressed. */
-    val dpadReleased = if (realistic) R.drawable.empty else R.drawable.ic_button_dpad_highlight
+    /** What goes over the d-pad while no direction is pressed: the same thin highlight for
+     * both styles (the realistic cross has the flat one's shape), so presses show the same. */
+    val dpadReleased = R.drawable.ic_button_dpad_highlight
 
-    /** What goes over the d-pad for the directions pressed (1 up, 2 down, 4 left, 8 right). */
-    fun dpadPressed(state: Int) = if (realistic) {
-        when (state) {
-            1 -> R.drawable.real_dpad_pressed_up
-            2 -> R.drawable.real_dpad_pressed_down
-            4 -> R.drawable.real_dpad_pressed_left
-            5 -> R.drawable.real_dpad_pressed_up_left
-            6 -> R.drawable.real_dpad_pressed_down_left
-            8 -> R.drawable.real_dpad_pressed_right
-            9 -> R.drawable.real_dpad_pressed_up_right
-            10 -> R.drawable.real_dpad_pressed_down_right
-            else -> dpadReleased
-        }
-    } else {
-        when (state) {
-            1 -> R.drawable.ic_button_dpad_highlight_pressed_up
-            2 -> R.drawable.ic_button_dpad_highlight_pressed_down
-            4 -> R.drawable.ic_button_dpad_highlight_pressed_left
-            5 -> R.drawable.ic_button_dpad_highlight_pressed_up_left
-            6 -> R.drawable.ic_button_dpad_highlight_pressed_down_left
-            8 -> R.drawable.ic_button_dpad_highlight_pressed_right
-            9 -> R.drawable.ic_button_dpad_highlight_pressed_up_right
-            10 -> R.drawable.ic_button_dpad_highlight_pressed_down_right
-            else -> dpadReleased
-        }
+    /** What goes over the d-pad for the directions pressed (1 up, 2 down, 4 left, 8 right):
+     * the highlight shifts towards them, in both styles. */
+    fun dpadPressed(state: Int) = when (state) {
+        1 -> R.drawable.ic_button_dpad_highlight_pressed_up
+        2 -> R.drawable.ic_button_dpad_highlight_pressed_down
+        4 -> R.drawable.ic_button_dpad_highlight_pressed_left
+        5 -> R.drawable.ic_button_dpad_highlight_pressed_up_left
+        6 -> R.drawable.ic_button_dpad_highlight_pressed_down_left
+        8 -> R.drawable.ic_button_dpad_highlight_pressed_right
+        9 -> R.drawable.ic_button_dpad_highlight_pressed_up_right
+        10 -> R.drawable.ic_button_dpad_highlight_pressed_down_right
+        else -> dpadReleased
     }
 }

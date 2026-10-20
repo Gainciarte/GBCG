@@ -155,17 +155,19 @@ def round_button(color, pressed, size=256, letter=None):
     cx = cy = r = size * 0.5
     d = np.sqrt((x - cx) ** 2 + (y - cy) ** 2)
     mask = (d <= r).astype(float)
-    depth = (0.5 if pressed else 1.0) * size * 0.05
+    depth = (0.3 if pressed else 1.0) * size * 0.05
     height = box_blur(mask, size * 0.06 * SS) * depth * SS
-    dome = np.clip(1 - (d / r) ** 2, 0, 1) * size * (0.015 if pressed else 0.035) * SS
+    dome = np.clip(1 - (d / r) ** 2, 0, 1) * size * (0.004 if pressed else 0.035) * SS
     height = height + dome * mask
     if letter:
         # Engraved into the button, not raised
         # A little left of the middle, as on the real buttons
         glyph = letter_mask(letter, size, size, margin, cx - size * 0.045, cy, size * 0.48)
         height = height - box_blur(glyph, size * 0.004 * SS) * size * 0.014 * SS
-    base = hex_rgb(color) * (0.85 if pressed else 1.0)
-    rgba, grain = shade(mask, height / SS, base, spec=0.22 if pressed else 0.42, shine=26, ambient=0.45,
+    # Pressed: sunk, flat and much darker, the same feedback as the flat buttons (whose
+    # pressed state is a plain darker disc)
+    base = hex_rgb(color) * (0.6 if pressed else 1.0)
+    rgba, grain = shade(mask, height / SS, base, spec=0.06 if pressed else 0.42, shine=26, ambient=0.45,
                         diffuse=0.72, rim=0.45 if pressed else 0.35, rim_width=size * 0.03)
     return finish((crop(rgba, size, size, margin), grain), size, size)
 
@@ -175,9 +177,9 @@ def pill_button(color, pressed, w=384, h=128):
     margin = h // 4
     x, y = grid(w, h, margin)
     mask = rounded_rect(x, y, 0, 0, w, h, h / 2)
-    depth = (0.4 if pressed else 1.0) * h * 0.1
+    depth = (0.3 if pressed else 1.0) * h * 0.1
     height = box_blur(mask, h * 0.12 * SS) * depth * SS
-    base = hex_rgb(color) * (0.82 if pressed else 1.0)
+    base = hex_rgb(color) * (0.6 if pressed else 1.0)
     rgba, grain = shade(mask, height / SS, base, spec=0.06, shine=8, ambient=0.55, diffuse=0.55, grain=0.05,
                         rim=0.45 if pressed else 0.35, rim_width=h * 0.06)
     return finish((crop(rgba, w, h, margin), grain), w, h)
@@ -244,23 +246,6 @@ def dpad(color, size=320, style="gbc"):
     rgba, grain = shade(mask, height / SS, hex_rgb(color), spec=0.32, shine=22, ambient=0.45, diffuse=0.7,
                         rim=0.35, rim_width=size * 0.025)
     return finish((crop(rgba, size, size, margin), grain), size, size)
-
-
-def dpad_pressed_overlay(directions, size=320):
-    """Darkens the pressed arms."""
-    x, y = grid(size, size)
-    mask, lo, hi = cross_mask(x, y, size)
-    sel = np.zeros_like(mask)
-    regions = {
-        "up": y < lo, "down": y > hi, "left": x < lo, "right": x > hi,
-    }
-    for dname in directions:
-        sel = np.maximum(sel, regions[dname].astype(float))
-    alpha = box_blur(sel * mask, size * 0.02 * SS) * mask * 0.38
-    rgba = np.zeros(mask.shape + (4,))
-    rgba[..., 3] = alpha
-    img = Image.fromarray((rgba * 255).astype(np.uint8), "RGBA")
-    return img.resize((size, size), Image.LANCZOS)
 
 
 def tileable_noise(size, sigma):
@@ -330,12 +315,7 @@ def main():
         images[f"real_button_startselect{suffix}_pressed"] = pill_button(c["ss"], True)
     images["real_dpad_dmg"] = dpad(DMG["dpad"], style="dmg")
     images["real_dpad_dmg_dark"] = dpad(DMG_DARK["dpad"], style="dmg")
-    for name, dirs in {
-        "up": ["up"], "down": ["down"], "left": ["left"], "right": ["right"],
-        "up_left": ["up", "left"], "up_right": ["up", "right"],
-        "down_left": ["down", "left"], "down_right": ["down", "right"],
-    }.items():
-        images[f"real_dpad_pressed_{name}"] = dpad_pressed_overlay(dirs)
+    # Presses on the d-pad use the flat one's highlight (ButtonArt.kt): same shape, same feedback
     # The GBC's plastic is visibly pebbled; the DMG's is smoother
     images["skin_texture"] = plastic_texture(bump=1.1, strength=0.22, coarse=0.35, sparkle=0.004)
     images["skin_texture_dmg"] = plastic_texture(bump=0.8, strength=0.10, coarse=0.25)
