@@ -205,6 +205,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
     private external fun setOptions(options: ByteArray)
     private external fun checkVibrationFun(): Boolean
     private external fun checkErrorFun(): Boolean
+    private external fun checkResetRequest(): Boolean
     private external fun checkTurboFun(): Boolean
     private external fun flushLogs()
     private external fun updateAccelerometer(x: Float, y: Float)
@@ -279,10 +280,20 @@ class GLActivity : BaseActivity(), SensorEventListener {
                     }.setCancelable(false)
                     .create()
                     .show()
+            } else if (checkResetRequest()) {
+                // "Reset" in the in-game menu: start the game again, as switching it off and on
+                restart()
             } else {
                 handler.postDelayed(checkEmulatorState, 10)
             }
         }
+    }
+
+    /** Starts the game again from the beginning, without its autosaved state. */
+    private fun restart() {
+        stopGBCC()
+        reboot = true
+        startGBCC()
     }
 
     private fun hapticVibrate(view: View, pressed: Boolean) {
@@ -410,7 +421,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
         binding.buttonStart.setImageDrawable(buttonArt.startSelect())
         binding.buttonSelect.setImageDrawable(buttonArt.startSelect())
         binding.dpad.dpadBackground.setImageResource(buttonArt.dpad)
-        binding.dpad.dpadHighlight.setImageResource(buttonArt.dpadReleased)
+        binding.dpad.dpadHighlight.setImageDrawable(buttonArt.dpadReleased())
         buttonArt.dpadTint?.let {
             binding.dpad.dpadBackground.setColorFilter(ContextCompat.getColor(this, it), PorterDuff.Mode.SRC_IN)
         }
@@ -645,7 +656,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
                     if (changed) {
                         hapticVibrate(view, true)
                         if (animateButtons) {
-                            binding.dpad.dpadHighlight.setImageResource(buttonArt.dpadPressed(state))
+                            binding.dpad.dpadHighlight.setImageDrawable(buttonArt.dpadPressed(state))
                         }
                     }
                 }
@@ -653,7 +664,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
                     updateDpad(0)
                     hapticVibrate(view, false)
                     if (animateButtons) {
-                        binding.dpad.dpadHighlight.setImageResource(buttonArt.dpadReleased)
+                        binding.dpad.dpadHighlight.setImageDrawable(buttonArt.dpadReleased())
                     }
                 }
             }
@@ -782,7 +793,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
             }
         }
         handler.post(checkEmulatorState)
-        if (!reboot && (resume || prefs.getBoolean("auto_resume", false))) {
+        if (!reboot && (resume || autoResume(configFile))) {
             loadState(autoSaveState)
             binding.turboToggle.isChecked = false
             resume = false
@@ -803,6 +814,19 @@ class GLActivity : BaseActivity(), SensorEventListener {
                     this, arrayOf(Manifest.permission.CAMERA), REQUEST_CODE_PERMISSIONS
                 )
             }
+        }
+    }
+
+    /** "Auto resume" for this game: its own setting (RomConfigActivity) if it has one, otherwise
+     * the general one. The core reads the game's other settings itself; this one is the app's. */
+    private fun autoResume(configFile: File?): Boolean {
+        val own = configFile?.let { file ->
+            java.util.Properties().apply { file.inputStream().use { load(it) } }.getProperty("autoresume")
+        }
+        return when (own) {
+            "true" -> true
+            "false" -> false
+            else -> prefs.getBoolean("auto_resume", false)
         }
     }
 
@@ -1150,11 +1174,7 @@ class GLActivity : BaseActivity(), SensorEventListener {
                 .setTitle(R.string.quit_confirmation)
                 .setPositiveButton(R.string.button_quit) { _, _ -> finish() }
                 .setNegativeButton(android.R.string.cancel) { _, _ -> }
-                .setNeutralButton(R.string.button_reboot) { _, _ ->
-                    stopGBCC()
-                    reboot = true
-                    startGBCC()
-                }
+                .setNeutralButton(R.string.button_reboot) { _, _ -> restart() }
                 .create()
             dialog.window?.let {
                 WindowCompat.getInsetsController(it, it.decorView).let { controller ->

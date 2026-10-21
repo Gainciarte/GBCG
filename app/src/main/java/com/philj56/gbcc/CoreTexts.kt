@@ -19,9 +19,9 @@ object CoreTexts {
         "Turbo mult:" to R.string.core_menu_turbo,
         "Vsync:" to R.string.core_menu_vsync,
         "Interlacing:" to R.string.core_menu_interlacing,
-        "FPS counter:" to R.string.core_menu_fps,
         "Cheats:" to R.string.core_menu_cheats,
         "Palette:" to R.string.core_menu_palette,
+        "Reset:" to R.string.core_menu_reset,
         // Menu values
         "On" to R.string.core_on,
         "Off" to R.string.core_off,
@@ -29,6 +29,8 @@ object CoreTexts {
         "Loopback" to R.string.core_loopback,
         "Printer" to R.string.core_printer,
         "Unlimited" to R.string.core_unlimited,
+        "Press A" to R.string.core_reset_press,
+        "Press A again" to R.string.core_reset_confirm,
         // Shader names, from the core's window.c
         "Colour Correct" to R.string.core_shader_colour_correct,
         "Subpixel" to R.string.settings_shader_subpixel,

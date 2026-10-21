@@ -205,16 +205,14 @@ def triangle_mask(x, y, cx, cy, size, direction):
     return inside.astype(float)
 
 
-def dpad(color, size=320, style="gbc"):
-    """The d-pad. The GBC's has a dimple in the middle and a raised arrow head near the end
-    of each arm; the DMG's has three grooves across each arm and a small dome in the middle,
-    sitting in a sunken ring."""
-    margin = size // 8
-    x, y = grid(size, size, margin)
+def dpad_details(x, y, size, style):
+    """Height of the details on the d-pad's face: the GBC's dimple in the middle and raised
+    arrow heads near the end of each arm; the DMG's three grooves across each arm and small
+    dome in the middle, sitting in a sunken ring."""
     mask, lo, hi = cross_mask(x, y, size)
-    height = box_blur(mask, size * 0.035 * SS) * size * 0.045 * SS
     cx = cy = size * 0.5
     d = np.sqrt((x - cx) ** 2 + (y - cy) ** 2)
+    height = np.zeros_like(mask)
     if style == "gbc":
         rd = size * 0.12
         height -= np.clip(1 - (d / rd) ** 2, 0, 1) * size * 0.02 * SS
@@ -226,11 +224,9 @@ def dpad(color, size=320, style="gbc"):
             heads = np.maximum(heads, triangle_mask(x, y, ax, ay, t, direction))
         height += box_blur(heads, size * 0.004 * SS) * size * 0.012 * SS
     else:
-        # Sunken ring with a dome inside
         ring = ((d > size * 0.07) & (d < size * 0.105)).astype(float)
         height -= box_blur(ring, size * 0.006 * SS) * size * 0.012 * SS
         height += np.clip(1 - (d / (size * 0.07)) ** 2, 0, 1) ** 0.5 * size * 0.02 * SS
-        # Three grooves across each arm, from near the middle towards the end
         arm = hi - lo
         grooves = np.zeros_like(mask)
         for k in range(3):
@@ -243,9 +239,48 @@ def dpad(color, size=320, style="gbc"):
                     (size - along - gw, cy - gl / 2, size - along, cy + gl / 2)):     # right
                 grooves = np.maximum(grooves, rounded_rect(x, y, gx0, gy0, gx1, gy1, gw / 2))
         height -= box_blur(grooves, size * 0.004 * SS) * size * 0.01 * SS
+    return height * mask
+
+
+def dpad_bevel(x, y, size):
+    mask, lo, hi = cross_mask(x, y, size)
+    return mask, box_blur(mask, size * 0.035 * SS) * size * 0.045 * SS
+
+
+def dpad(color, size=320):
+    """The d-pad's cross, plain: its details (dpad_detail_overlay) go on a layer of their own,
+    which the app moves with the face when the d-pad is pressed."""
+    margin = size // 8
+    x, y = grid(size, size, margin)
+    mask, height = dpad_bevel(x, y, size)
     rgba, grain = shade(mask, height / SS, hex_rgb(color), spec=0.32, shine=22, ambient=0.45, diffuse=0.7,
                         rim=0.35, rim_width=size * 0.025)
     return finish((crop(rgba, size, size, margin), grain), size, size)
+
+
+def dpad_detail_overlay(style, size=320):
+    """The d-pad's details as a layer to lay over the plain cross of any colour: the cross is
+    lit with and without them, and only the difference is kept, as black (shade) or white
+    (light) at low opacity."""
+    margin = size // 8
+    x, y = grid(size, size, margin)
+    mask, bevel = dpad_bevel(x, y, size)
+
+    def light(height):
+        gy, gx = np.gradient(height / SS)
+        n = np.stack([-gx, -gy, np.ones_like(height)], axis=-1)
+        n /= np.linalg.norm(n, axis=-1, keepdims=True)
+        return 0.45 + 0.7 * np.clip(n @ LIGHT, 0, 1)
+
+    plain = light(bevel)
+    delta = (light(bevel + dpad_details(x, y, size, style)) - plain) / plain
+    rgba = np.zeros(mask.shape + (4,))
+    rgba[..., :3] = np.where(delta[..., None] > 0, 1.0, 0.0)
+    # Darker is exact as black over any colour; lighter, as white over a dark button
+    rgba[..., 3] = np.clip(np.where(delta > 0, delta * 0.9, -delta * 1.7), 0, 0.9) * mask
+    rgba = crop(rgba, size, size, margin)
+    img = Image.fromarray((rgba * 255).astype(np.uint8), "RGBA")
+    return img.resize((size, size), Image.LANCZOS)
 
 
 def tileable_noise(size, sigma):
@@ -307,14 +342,16 @@ def main():
             images[f"real_button_{letter}_{shell}_pressed"] = round_button(colour, True, letter=letter.upper())
         images[f"real_button_startselect_{shell}"] = pill_button(colour, False)
         images[f"real_button_startselect_{shell}_pressed"] = pill_button(colour, True)
-        images[f"real_dpad_{shell}"] = dpad(colour, style="gbc")
+        images[f"real_dpad_{shell}"] = dpad(colour)
     for suffix, c in {"_dmg": DMG, "_dmg_dark": DMG_DARK}.items():
         images[f"real_button_ab{suffix}"] = round_button(c["ab"], False)
         images[f"real_button_ab{suffix}_pressed"] = round_button(c["ab"], True)
         images[f"real_button_startselect{suffix}"] = pill_button(c["ss"], False)
         images[f"real_button_startselect{suffix}_pressed"] = pill_button(c["ss"], True)
-    images["real_dpad_dmg"] = dpad(DMG["dpad"], style="dmg")
-    images["real_dpad_dmg_dark"] = dpad(DMG_DARK["dpad"], style="dmg")
+    images["real_dpad_dmg"] = dpad(DMG["dpad"])
+    images["real_dpad_dmg_dark"] = dpad(DMG_DARK["dpad"])
+    images["real_dpad_details_gbc"] = dpad_detail_overlay("gbc")
+    images["real_dpad_details_dmg"] = dpad_detail_overlay("dmg")
     # Presses on the d-pad use the flat one's highlight (ButtonArt.kt): same shape, same feedback
     # The GBC's plastic is visibly pebbled; the DMG's is smoother
     images["skin_texture"] = plastic_texture(bump=1.1, strength=0.22, coarse=0.35, sparkle=0.004)
@@ -333,6 +370,7 @@ def main():
     def put(name, w, h, x, y):
         sheet.alpha_composite(images[name].resize((w, h), Image.LANCZOS), (x, y))
     put("real_dpad_teal", 200, 200, 20, 20)
+    put("real_dpad_details_gbc", 200, 200, 20, 20)
     put("real_button_b_teal", 120, 120, 250, 90)
     put("real_button_a_teal", 120, 120, 390, 40)
     put("real_button_b_teal_pressed", 120, 120, 250, 240)
@@ -340,10 +378,12 @@ def main():
     put("real_button_startselect_teal", 120, 40, 60, 420)
     put("real_button_startselect_teal_pressed", 120, 40, 200, 420)
     put("real_dpad_dmg", 200, 200, 570, 20)
+    put("real_dpad_details_dmg", 200, 200, 570, 20)
     put("real_button_ab_dmg", 120, 120, 800, 90)
     put("real_button_ab_dmg_pressed", 120, 120, 940, 40)
     put("real_button_startselect_dmg", 120, 40, 610, 420)
     put("real_dpad_dmg_dark", 140, 140, 800, 380)
+    put("real_dpad_details_dmg", 140, 140, 800, 380)
     put("real_button_ab_dmg_dark", 90, 90, 960, 400)
     sheet.convert("RGB").save(os.path.join(ROOT, "sources", "skin_preview.png"))
 

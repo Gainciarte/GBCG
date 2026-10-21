@@ -291,9 +291,11 @@
     <string name="core_menu_turbo">Vit. turbo:</string>
     <string name="core_menu_vsync">Vsync:</string>
     <string name="core_menu_interlacing">Entrelacem.:</string>
-    <string name="core_menu_fps">Images/s:</string>
     <string name="core_menu_cheats">Triche:</string>
     <string name="core_menu_palette">Palette:</string>
+    <string name="core_menu_reset">Redémarrer:</string>
+    <string name="core_reset_press">Appuie sur A</string>
+    <string name="core_reset_confirm">Encore A</string>
     <string name="core_on">Oui</string>
     <string name="core_off">Non</string>
     <string name="core_disconnected">Déconnecté</string>

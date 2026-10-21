@@ -293,9 +293,11 @@
     <string name="core_menu_turbo">Mult. turbo:</string>
     <string name="core_menu_vsync">Vsync:</string>
     <string name="core_menu_interlacing">Entrelaçam.:</string>
-    <string name="core_menu_fps">Mostrar FPS:</string>
     <string name="core_menu_cheats">Trapaças:</string>
     <string name="core_menu_palette">Paleta:</string>
+    <string name="core_menu_reset">Reiniciar:</string>
+    <string name="core_reset_press">Aperte A</string>
+    <string name="core_reset_confirm">Aperte A de novo</string>
     <string name="core_on">Sim</string>
     <string name="core_off">Não</string>
     <string name="core_disconnected">Desconectado</string>

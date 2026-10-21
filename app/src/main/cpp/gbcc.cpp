@@ -15,6 +15,7 @@
 
 #include <string>
 #include <cmath>
+#include <atomic>
 #include <mutex>
 #include <utility>
 #include <vector>
@@ -177,6 +178,20 @@ extern "C" void __wrap_gbcc_window_show_message(struct gbcc *gbc, const char *ms
 		}
 	}
 	__real_gbcc_window_show_message(gbc, translated ? buffer : msg, seconds, pad);
+}
+
+/* Set by "Reset" in the in-game menu (core/menu.c); the app checks it and restarts the game */
+static std::atomic<bool> reset_requested{false};
+
+extern "C" void gbcc_request_reset(void) {
+	reset_requested = true;
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_philj56_gbcc_GLActivity_checkResetRequest(
+		JNIEnv *,
+		jobject /* this */) {
+	return static_cast<jboolean>(reset_requested.exchange(false));
 }
 
 extern "C" JNIEXPORT void JNICALL

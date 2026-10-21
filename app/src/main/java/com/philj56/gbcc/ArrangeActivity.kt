@@ -72,7 +72,7 @@ class ArrangeActivity : BaseActivity() {
         binding.buttonStart.setImageDrawable(art.startSelect())
         binding.buttonSelect.setImageDrawable(art.startSelect())
         binding.dpad.dpadBackground.setImageResource(art.dpad)
-        binding.dpad.dpadHighlight.setImageResource(art.dpadReleased)
+        binding.dpad.dpadHighlight.setImageDrawable(art.dpadReleased())
         art.dpadTint?.let {
             binding.dpad.dpadBackground.setColorFilter(ContextCompat.getColor(this, it), android.graphics.PorterDuff.Mode.SRC_IN)
         }

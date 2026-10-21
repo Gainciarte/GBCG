@@ -32,6 +32,14 @@ static void turbo_index(struct gbcc *gbc, bool inc);
 static void menu_line(char *dst, char marker, const char *label, const char *value);
 
 const char *gbcc_tr(const char *text);
+void gbcc_request_reset(void);
+
+/*
+ * The menu has room for twelve rows (the screen is 144 pixels high, the font 12), so
+ * GBCG's "Reset" takes the row of the FPS counter, which is also in the app's settings.
+ * It asks for A twice, so a game isn't lost by mistake.
+ */
+static bool reset_armed = false;
 
 /* Each line is 32 characters: a marker, the label in 13 columns and the value in 18 */
 #define MENU_LABEL_WIDTH 13
@@ -116,7 +124,8 @@ void gbcc_menu_update(struct gbcc *gbc)
 	menu_line(line += MENU_LINE_WIDTH, selected(menu, GBCC_MENU_ENTRY_TURBO_MULT), gbcc_tr("Turbo mult:"), turbo_text);
 	menu_line(line += MENU_LINE_WIDTH, selected(menu, GBCC_MENU_ENTRY_VSYNC), gbcc_tr("Vsync:"), bool2str(gbc->core.sync_to_video));
 	menu_line(line += MENU_LINE_WIDTH, selected(menu, GBCC_MENU_ENTRY_INTERLACING), gbcc_tr("Interlacing:"), bool2str(gbc->interlacing));
-	menu_line(line += MENU_LINE_WIDTH, selected(menu, GBCC_MENU_ENTRY_FPS_COUNTER), gbcc_tr("FPS counter:"), bool2str(gbc->show_fps));
+	menu_line(line += MENU_LINE_WIDTH, selected(menu, GBCC_MENU_ENTRY_FPS_COUNTER), gbcc_tr("Reset:"),
+			reset_armed ? gbcc_tr("Press A again") : gbcc_tr("Press A"));
 	menu_line(line += MENU_LINE_WIDTH, selected(menu, GBCC_MENU_ENTRY_CHEATS), gbcc_tr("Cheats:"), bool2str(gbc->core.cheats.enabled));
 	menu_line(line += MENU_LINE_WIDTH, selected(menu, GBCC_MENU_ENTRY_PALETTE), gbcc_tr("Palette:"),
 			gbcc_tr(gbc->core.ppu.palette.name));
@@ -138,6 +147,9 @@ void gbcc_menu_process_key(struct gbcc *gbc, enum gbcc_key key)
 {
 	struct gbcc_menu *menu = &gbc->menu;
 
+	if (key != GBCC_KEY_A && key != GBCC_KEY_START) {
+		reset_armed = false;
+	}
 	switch (key) {
 		case GBCC_KEY_UP:
 			if (menu->selection == 0) {
@@ -236,7 +248,16 @@ void toggle_option(struct gbcc *gbc, enum gbcc_key key)
 			gbc->interlacing ^= 1;
 			break;
 		case GBCC_MENU_ENTRY_FPS_COUNTER:
-			gbc->show_fps ^= 1;
+			if (key != GBCC_KEY_A && key != GBCC_KEY_START) {
+				break;
+			}
+			if (!reset_armed) {
+				reset_armed = true;
+			} else {
+				reset_armed = false;
+				menu->show = false;
+				gbcc_request_reset();
+			}
 			break;
 		case GBCC_MENU_ENTRY_PALETTE:
 			{

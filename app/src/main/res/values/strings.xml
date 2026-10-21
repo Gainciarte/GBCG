@@ -301,9 +301,11 @@
     <string name="core_menu_turbo">Turbo mult:</string>
     <string name="core_menu_vsync">Vsync:</string>
     <string name="core_menu_interlacing">Interlacing:</string>
-    <string name="core_menu_fps">FPS counter:</string>
     <string name="core_menu_cheats">Cheats:</string>
     <string name="core_menu_palette">Palette:</string>
+    <string name="core_menu_reset">Reset:</string>
+    <string name="core_reset_press">Press A</string>
+    <string name="core_reset_confirm">Press A again</string>
     <string name="core_on">On</string>
     <string name="core_off">Off</string>
     <string name="core_disconnected">Disconnected</string>

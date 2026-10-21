@@ -91,19 +91,26 @@ class SkinPreviewTest {
             d.setBounds(x, y, x + w, y + h)
             d.draw(canvas)
         }
-        val flat = listOf(R.drawable.ic_button_dpad_background to 0)
-        // Row 0: flat d-pad released, up, right, up-right; flat A released and pressed
-        val flatOver = listOf(R.drawable.ic_button_dpad_highlight, R.drawable.ic_button_dpad_highlight_pressed_up,
-            R.drawable.ic_button_dpad_highlight_pressed_right, R.drawable.ic_button_dpad_highlight_pressed_up_right)
-        val realOver = flatOver
-        for ((i, over) in flatOver.withIndex()) {
-            put(flat[0].first, i, 0); put(over, i, 0)
+        fun putDrawable(d: android.graphics.drawable.Drawable, col: Int, row: Int, w: Int = 220, h: Int = 220) {
+            val x = col * cell + (cell - w) / 2
+            val y = row * cell + (cell - h) / 2
+            d.setBounds(x, y, x + w, y + h)
+            d.draw(canvas)
+        }
+        // Rows 0 and 1: flat and realistic d-pad, released, up, right, up-right
+        for ((row, realistic) in listOf(0 to false, 1 to true)) {
+            val prefs = context.getSharedPreferences("pressed$realistic", Context.MODE_PRIVATE)
+            prefs.edit(commit = true) {
+                putString("color", "Dandelion")
+                putBoolean("realistic_buttons", realistic)
+            }
+            val art = ButtonArt(context, prefs, true)
+            for ((col, state) in listOf(0, 1, 8, 9).withIndex()) {
+                put(art.dpad, col, row)
+                putDrawable(if (state == 0) art.dpadReleased() else art.dpadPressed(state), col, row)
+            }
         }
         put(R.drawable.ic_button_ab, 4, 0, 180, 180); put(R.drawable.ic_button_ab_pressed, 5, 0, 180, 180)
-        // Row 1: the same, realistic
-        for ((i, over) in realOver.withIndex()) {
-            put(R.drawable.real_dpad_dandelion, i, 1); put(over, i, 1)
-        }
         put(R.drawable.real_button_a_dandelion, 4, 1, 180, 180); put(R.drawable.real_button_a_dandelion_pressed, 5, 1, 180, 180)
         // Row 2: pills, flat and realistic, released and pressed
         put(R.drawable.ic_button_startselect, 0, 2, 240, 80); put(R.drawable.ic_button_startselect_pressed, 1, 2, 240, 80)
@@ -156,6 +163,7 @@ class SkinPreviewTest {
         val dpad = context.getDrawable(art.dpad)!!.mutate()
         art.dpadTint?.let { dpad.setTint(context.getColor(it)) }
         put(dpad, p.dpad)
+        put(art.dpadReleased(), p.dpad)
 
         // The black corners the layout puts over the skin
         paint.color = Color.BLACK
